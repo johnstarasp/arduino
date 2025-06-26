@@ -24,6 +24,7 @@ def wait_for_network(timeout=30):
     start_time = time.time()
 
     while time.time() - start_time < timeout:
+        send_command("AT+CREG?", delay=2)
         response = send_command("AT+CREG?", delay=2)
         if any("+CREG: 0,1" in r or "+CREG: 0,5" in r for r in response):
             print("✅ Registered to network.")
