@@ -18,6 +18,8 @@ def send_at(command, delay=1):
 send_at('AT')                  # Check modem is responsive
 send_at('AT+CMGF=1')           # Set SMS to Text mode
 send_at('AT+CSCS="GSM"')       # Use GSM character set
+send_at('AT+CREG?')  # Should return 0,1 (registered)
+send_at('AT+CSQ')    # Signal quality
 send_at('AT+CMGS="+6980531698"')  # Set recipient number (replace with real one)
 time.sleep(1)
 
