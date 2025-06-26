@@ -41,6 +41,9 @@ time.sleep(2)
 
 send_command("AT")
 send_command("AT+CFUN=1")
+send_command("AT+CNMP=38")
+send_command("AT+COPS=0")
+send_command("AT+CSQ")
 send_command("AT+CPIN?")          # Check SIM status
 send_command("AT+CMGF=1")         # SMS text mode
 
