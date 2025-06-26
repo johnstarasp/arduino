@@ -48,6 +48,7 @@ time.sleep(2)
 send_command("AT")
 send_command("AT+CREG?")
 send_command("AT+CFUN=1")
+send_command("AT+CPIN?")  # Check SIM status
 # send_command("AT+CNMP=38")    # LTE only (optional)
 # send_command("AT+COPS=0")     # Auto operator selection (optional)
 # send_command("AT+CBANDCFG='LTE',3,20")  # Band config (optional)
