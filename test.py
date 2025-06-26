@@ -35,6 +35,9 @@ def wait_for_network(timeout=60):
 
 # Start communication and wait for registration
 send_at('AT')  # Basic check
+send_at('AT+CREG?') 
+send_at('AT+CFUN=1') 
+
 if not wait_for_network():
     ser.close()
     exit(1)
