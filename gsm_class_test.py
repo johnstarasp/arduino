@@ -4,7 +4,7 @@ import sys
 from gsm_class import gsm
 
 gsm_ser = serial.Serial()
-gsm_ser.port = "/dev/ttyUSB0"
+gsm_ser.port = "/dev/serial0"
 gsm_ser.baudrate = 9600
 gsm_ser.timeout = 3
 gsm_ser.xonxoff = False
@@ -19,28 +19,28 @@ try:
     gsm_ser.flushInput()
     gsm_ser.flushOutput()
 except:
-    print 'Cannot open serial port'
+    print('Cannot open serial port')
     sys.exit()
 
 GSM = gsm(gsm_ser)
 
 GSM.sendCommand("AT+IPR=9600;&W")
-print GSM.getResponse()
+print(GSM.getResponse())
 
 time.sleep(.1)
 
 GSM.sendCommand("AT+CMGF=1;&W")
-print GSM.getResponse()
+print(GSM.getResponse())
 
 time.sleep(.1)
 
 GSM.sendCommand("AT+CREG?")
-print GSM.getResponse()
+print(GSM.getResponse())
 
 time.sleep(.1)
 
 GSM.sendCommand("AT+CMGD=1")
-print GSM.getResponse()
+print(GSM.getResponse())
 
 time.sleep(.1)
 
@@ -53,9 +53,9 @@ time.sleep(.1)
 
 status,msg = GSM.readMessage()
 if status == 0:
-    print 'no new messages'
+    print('no new messages')
 else:
-    print 'new messages arrived: ' + msg
+    print('new messages arrived: ' + msg)
 
 
 

@@ -38,7 +38,7 @@ class gsm():
         flag = False
         self.sendCommand('AT+CMGS=\"' + phone_number + '\"')
         time.sleep(2)
-        print 'SUCCESS'
+        print('SUCCESS')
         self.serialPort.write(message)
         self.serialPort.write('\x1A')  # send messsage if prompt received
         flag = True
@@ -88,23 +88,23 @@ if __name__ == "__main__":
         gsm_ser.flushInput()
         gsm_ser.flushOutput()
     except:
-        print 'Cannot open serial port'
+        print('Cannot open serial port')
         sys.exit()
 
     GSM = gsm(gsm_ser)
 
     GSM.sendCommand("AT+IPR=9600;&W")
-    print GSM.getResponse()
+    print(GSM.getResponse())
 
     time.sleep(.1)
 
     GSM.sendCommand("AT+CMGF=1;&W")
-    print GSM.getResponse()
+    print(GSM.getResponse())
 
     time.sleep(.1)
 
     GSM.sendCommand("AT+CREG?")
-    print GSM.getResponse()
+    print(GSM.getResponse())
 
     time.sleep(.1)
 
@@ -112,9 +112,9 @@ if __name__ == "__main__":
 
     status,msg = GSM.readMessage()
     if status == 0:
-        print 'no new messages'
+        print('no new messages')
     else:
-        print 'new messages arrived: ' + msg
+        print('new messages arrived: ' + msg)
 
     # if (GSM.sendMessage("8129025513", "HELLO MISTER") == True):
     #     print 'Message sending Success'
