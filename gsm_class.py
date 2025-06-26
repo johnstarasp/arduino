@@ -93,12 +93,12 @@ if __name__ == "__main__":
 
     GSM = gsm(gsm_ser)
 
-    GSM.sendCommand("AT+IPR=9600;&W")
+    GSM.sendCommand("AT+IPR=9600;")
     print(GSM.getResponse())
 
     time.sleep(.1)
 
-    GSM.sendCommand("AT+CMGF=1;&W")
+    GSM.sendCommand("AT+CMGF=1;")
     print(GSM.getResponse())
 
     time.sleep(.1)
