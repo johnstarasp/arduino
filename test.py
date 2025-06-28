@@ -9,7 +9,7 @@ BAUDRATE = 115200           # Default for SIM7070G
 PHONE_NUMBER = "+6980531698"  # Replace with your phone number
 MESSAGE = "Hello from Raspberry Pi and SIM7070G!"
 
-def send_at(command, expected_response, timeout=45):
+def send_at(command, expected_response, timeout=3):
     """Send AT command and wait for the expected response."""
     ser.write((command + '\r\n').encode())
     time.sleep(0.5)
