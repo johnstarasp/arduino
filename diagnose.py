@@ -4,7 +4,7 @@ import time
 # Use UART port (adjust if needed)
 ser = serial.Serial('/dev/serial0', baudrate=115200, timeout=1)
 
-def send_at(cmd, delay=1):
+def send_at(cmd, delay=3):
     """Send AT command and return list of response lines."""
     print(f">>> {cmd}")
     ser.write((cmd + "\r\n").encode())
@@ -69,19 +69,20 @@ print("🔍 Running SIM7070G diagnostics...\n")
 send_at('AT')
 send_at('AT+CSQ')  # Check signal strength
 send_at('AT+CREG?')  # Check network registration
-send_at('AT+CPIN?')  # Check SIM card status
-send_at('AT+CFUN=1')  # Set full functionality
-send_at('AT+CMNB?')  
-send_at('AT+CNMP?')  # Enable network registration notifications
-send_at('AT+COPS?')
-send_at('AT+CMGF=1')         # Text mode
-send_at('AT+CSCS="GSM"')     # GSM charset
-send_at('AT+CSQ')  # Check signal strength
-send_at('AT+CREG?') 
-send_at('AT+COPS=0')  # Check SIM card status
-send_at('AT+CREG?') 
-send_at('AT+CGDCONT=1,"IP","internet"') 
-send_at('AT+CREG?') 
+send_at('AT+CBANDCFG?')  # Check SIM card statu
+# send_at('AT+CPIN?')  # Check SIM card status
+# send_at('AT+CFUN=1')  # Set full functionality
+# send_at('AT+CMNB?')  
+# send_at('AT+CNMP?')  # Enable network registration notifications
+# send_at('AT+COPS?')
+# send_at('AT+CMGF=1')         # Text mode
+# send_at('AT+CSCS="GSM"')     # GSM charset
+# send_at('AT+CSQ')  # Check signal strength
+# send_at('AT+CREG?') 
+# send_at('AT+COPS=0')  # Check SIM card status
+# send_at('AT+CREG?') 
+# send_at('AT+CGDCONT=1,"IP","internet"') 
+# send_at('AT+CREG?') 
 
 print("\n✅ All checks passed. Ready to send SMS.")
 ser.close()
