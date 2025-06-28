@@ -30,7 +30,7 @@ time.sleep(1)
 
 # Initialize modem
 send_at("AT", "OK")
-send_at("CREG?", "0,1")  # Check if modem is ready
+send_at("AT+CREG?", "0,1")  # Check if modem is ready
 #send_at("ATE0", "OK")  # Echo off (optional)
 send_at("AT+CMGF=1", "OK")  # Set SMS text mode
 
