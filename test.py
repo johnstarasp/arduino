@@ -16,29 +16,29 @@ time.sleep(1)
 def send_at(command, expected=None, timeout=3):
     ser.write((command + "\r\n").encode())
     time.sleep(0.5)
-    end_time = time.time() + timeout
-    response = ""
-    while time.time() < end_time:
-        if ser.in_waiting:
-            response += ser.read(ser.in_waiting).decode(errors="ignore")
-            if expected and expected in response:
-                break
-    print(f">>> {command}")
-    print(response.strip())
-    return response.strip()
+    # end_time = time.time() + timeout
+    # response = ""
+    # while time.time() < end_time:
+    #     if ser.in_waiting:
+    #         response += ser.read(ser.in_waiting).decode(errors="ignore")
+    #         if expected and expected in response:
+    #             break
+    # print(f">>> {command}")
+    # print(response.strip())
+    # return response.strip()
 
 # === Wait for network registration ===
 def wait_for_network(timeout=120):
     print("⏳ Waiting for network registration...")
     start_time = time.time()
     while time.time() - start_time < timeout:
-        resp = send_at("AT+CREG?", "+CREG", timeout=2)
-        if "+CREG: 0,1" in resp or "+CREG: 0,5" in resp:
-            print("✅ Network registered!")
-            return True
-        time.sleep(3)
-    print("❌ Network registration failed.")
-    return False
+        send_at("AT+CREG?", "+CREG", timeout=2)
+    #     if "+CREG: 0,1" in resp or "+CREG: 0,5" in resp:
+    #         print("✅ Network registered!")
+    #         return True
+    #     time.sleep(3)
+    # print("❌ Network registration failed.")
+    return True
 
 
 # === STEP 1: Modem Initialization ===
