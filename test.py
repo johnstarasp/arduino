@@ -14,7 +14,7 @@ def send_at(cmd, expected=None, timeout=3):
     ser.write((cmd + "\r\n").encode())
     time.sleep(0.5)
     end_time = time.time() + timeout
-    response = b""
+    response = ""
     while time.time() < end_time:
         if ser.in_waiting:
             response += ser.read(ser.in_waiting)
