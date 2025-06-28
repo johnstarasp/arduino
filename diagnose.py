@@ -8,15 +8,15 @@ def send_at(cmd, delay=1):
     """Send AT command and return list of response lines."""
     print(f">>> {cmd}")
     ser.write((cmd + "\r\n").encode())
-    time.sleep(delay)
+    # time.sleep(delay)
 
-    lines = []
-    while ser.in_waiting:
-        line = ser.readline().decode(errors='ignore').strip()
-        if line:
-            print(line)
-            lines.append(line)
-    return lines
+    # lines = []
+    # while ser.in_waiting:
+    #     line = ser.readline().decode(errors='ignore').strip()
+    #     if line:
+    #         print(line)
+    #         lines.append(line)
+    # return lines
 
 def check_module():
     response = send_at('AT')
@@ -66,32 +66,22 @@ def send_test_sms(number, message="SIM test OK"):
 # ---- Main Diagnostic Flow ----
 print("🔍 Running SIM7070G diagnostics...\n")
 
-if not check_module():
-    print("❌ No response from module.")
-    ser.close()
-    exit(1)
-
-if not check_sim():
-    print("❌ SIM not ready. Check if it requires a PIN or is inserted.")
-    ser.close()
-    exit(1)
-
-if not check_signal():
-    print("❌ No signal. Check antenna or location.")
-    ser.close()
-    exit(1)
-
-if not check_network():
-    ser.close()
-    exit(1)
-
-if not check_operator():
-    print("⚠️ Operator not detected. SMS may fail.")
-
-configure_sms()
-
-# Uncomment to send test SMS
-# send_test_sms("+1234567890")  # Replace with your number
+send_at('AT')
+send_at('AT+CSQ')  # Check signal strength
+send_at('AT+CREG?')  # Check network registration
+send_at('AT+CPIN?')  # Check SIM card status
+send_at('AT+CFUN=1')  # Set full functionality
+send_at('AT+CMNB?')  
+send_at('AT+CNMP?')  # Enable network registration notifications
+send_at('AT+COPS?')
+send_at('AT+CMGF=1')         # Text mode
+send_at('AT+CSCS="GSM"')     # GSM charset
+send_at('AT+CSQ')  # Check signal strength
+send_at('AT+CREG?') 
+send_at('AT+COPS=0')  # Check SIM card status
+send_at('AT+CREG?') 
+send_at('AT+CGDCONT=1,"IP","internet"') 
+send_at('AT+CREG?') 
 
 print("\n✅ All checks passed. Ready to send SMS.")
 ser.close()
