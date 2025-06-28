@@ -8,7 +8,7 @@ def send_at(cmd, delay=1):
     """Send AT command and return list of response lines."""
     print(f">>> {cmd}")
     ser.write((cmd + "\r\n").encode())
-    # time.sleep(delay)
+    time.sleep(delay)
 
     # lines = []
     # while ser.in_waiting:
