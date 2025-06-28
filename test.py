@@ -1,57 +1,42 @@
 import serial
 import time
 
-# Use UART interface (connected via GPIO)
-ser = serial.Serial('/dev/serial0', baudrate=115200, timeout=1)
+# Set your serial port here
+SERIAL_PORT = "/dev/serial0"  # Or /dev/ttyUSB0 depending on connection
+BAUDRATE = 115200           # Default for SIM7070G
 
-def send_at(command, delay=1, read_all=True):
-    """Send AT command and return the response."""
-    print(f">>> {command}")
+# Your target phone number
+PHONE_NUMBER = "+6980531698"  # Replace with your phone number
+MESSAGE = "Hello from Raspberry Pi and SIM7070G!"
+
+def send_at(command, expected_response, timeout=2):
+    """Send AT command and wait for the expected response."""
     ser.write((command + '\r\n').encode())
-    time.sleep(delay)
-
-    response = []
-    while ser.in_waiting:
-        line = ser.readline().decode(errors='ignore').strip()
-        if line:
-            print(line)
-            response.append(line)
-    return response if read_all else response[-1] if response else ""
-
-def wait_for_network(timeout=60):
-    """Wait until SIM7070G is registered on the network."""
-    print("Waiting for network registration...")
-    start = time.time()
-    while time.time() - start < timeout:
-        response = send_at('AT+CREG?', delay=2)
-        for line in response:
-            if '+CREG:' in line and (',1' in line or ',5' in line):
-                print("✅ Network registered.")
-                return True
-        print("⏳ Not registered, retrying...")
-        time.sleep(3)
-    print("❌ Network registration timeout.")
+    time.sleep(0.5)
+    deadline = time.time() + timeout
+    response = b""
+    while time.time() < deadline:
+        if ser.in_waiting:
+            response += ser.read(ser.in_waiting)
+        if expected_response.encode() in response:
+            print("✅ " + response.decode(errors='ignore'))
+            return True
+    print("❌ Timeout or unexpected response:\n" + response.decode(errors='ignore'))
     return False
 
-# Start communication and wait for registration
-send_at('AT')  # Basic check
-send_at('AT+CREG?') 
-send_at('AT+CFUN=1') 
-
-if not wait_for_network():
-    ser.close()
-    exit(1)
-
-# Configure SMS
-send_at('AT+CMGF=1')            # Text mode
-send_at('AT+CSCS="GSM"')        # GSM charset
-
-# Send SMS
-recipient = "+6980531698"       # Replace with real phone number
-send_at(f'AT+CMGS="{recipient}"')
+# Open serial connection
+ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=1)
 time.sleep(1)
-ser.write(b"Magnet triggered!\x1A")  # Message + Ctrl+Z
-print("📨 Message sent, waiting for confirmation...")
-time.sleep(5)
 
+# Initialize modem
+send_at("AT", "OK")
+send_at("ATE0", "OK")  # Echo off (optional)
+send_at("AT+CMGF=1", "OK")  # Set SMS text mode
+
+# Send the SMS
+send_at(f'AT+CMGS="{PHONE_NUMBER}"', ">")  # Wait for > prompt
+ser.write((MESSAGE + "\x1A").encode())  # Ctrl+Z to send
+time.sleep(3)
+
+# Close the serial connection
 ser.close()
