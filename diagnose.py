@@ -70,6 +70,12 @@ send_at('AT')
 send_at('AT+CSQ')  # Check signal strength
 send_at('AT+CREG?')  # Check network registration
 send_at('AT+CBANDCFG?')  # Check SIM card statu
+send_at('AT+CNMP=13')
+send_at('AT+CMNB=2')
+send_at('AT+CFUN=1')
+send_at('AT+CSQ')  # Check signal strength
+send_at('AT+CREG?')
+
 # send_at('AT+CPIN?')  # Check SIM card status
 # send_at('AT+CFUN=1')  # Set full functionality
 # send_at('AT+CMNB?')  
