@@ -13,16 +13,16 @@ def send_at(command, expected_response, timeout=3):
     """Send AT command and wait for the expected response."""
     ser.write((command + '\r\n').encode())
     time.sleep(0.5)
-    deadline = time.time() + timeout
-    response = b""
-    while time.time() < deadline:
-        if ser.in_waiting:
-            response += ser.read(ser.in_waiting)
-        if expected_response.encode() in response:
-            print("✅ " + response.decode(errors='ignore'))
-            return True
-    print("❌ Timeout or unexpected response:\n" + response.decode(errors='ignore'))
-    return False
+    # deadline = time.time() + timeout
+    # response = b""
+    # while time.time() < deadline:
+    #     if ser.in_waiting:
+    #         response += ser.read(ser.in_waiting)
+    #     if expected_response.encode() in response:
+    #         print("✅ " + response.decode(errors='ignore'))
+    #         return True
+    # print("❌ Timeout or unexpected response:\n" + response.decode(errors='ignore'))
+    # return False
 
 # Open serial connection
 ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=1)
