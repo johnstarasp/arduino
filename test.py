@@ -13,16 +13,16 @@ time.sleep(1)
 def send_at(cmd, expected=None, timeout=3):
     ser.write((cmd + "\r\n").encode())
     time.sleep(0.5)
-    # end_time = time.time() + timeout
-    # response = b""
-    # while time.time() < end_time:
-    #     if ser.in_waiting:
-    #         response += ser.read(ser.in_waiting)
-    #     if expected and expected.encode() in response:
-    #         break
-    # print(f">>> {cmd}")
-    # print(response.decode(errors='ignore'))
-    # return response.decode(errors='ignore')
+    end_time = time.time() + timeout
+    response = b""
+    while time.time() < end_time:
+        if ser.in_waiting:
+            response += ser.read(ser.in_waiting)
+        if expected and expected.encode() in response:
+            break
+    print(f">>> {cmd}")
+    print(response.decode(errors='ignore'))
+    return response.decode(errors='ignore')
 
 # === 1. Basic modem init ===
 send_at("AT", "OK")
@@ -38,8 +38,9 @@ send_at("AT+COPS=0", "OK")      # Auto operator selection
 def wait_network(timeout=120):
     print("⏳ Waiting for network...")
     start = time.time()
+    resp = b""
     while time.time() - start < timeout:
-        resp = send_at("AT+CREG?", "+CREG", timeout=2)
+        resp += send_at("AT+CREG?", "+CREG", timeout=2)
         if "+CREG: 0,1" in resp or "+CREG: 0,5" in resp:
             print("✅ Network registered.")
             return True
