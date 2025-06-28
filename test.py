@@ -56,13 +56,14 @@ if not wait_for_network():
 
 # === STEP 3: Send SMS ===
 send_at("AT+CMGF=1", "OK")       # Text mode
-response = send_at(f'AT+CMGS="{PHONE_NUMBER}"', ">", timeout=5)
-if ">" in response:
-    ser.write((SMS_TEXT + "\x1A").encode())  # Send message with Ctrl+Z
-    print("📨 Sending SMS...")
-    time.sleep(5)
-else:
-    print("❌ Failed to get SMS prompt (no '>')")
+send_at(f'AT+CMGS="{PHONE_NUMBER}"', ">", timeout=5)
+send_at("AT+CREG?", "+CREG", timeout=2)
+# if ">" in response:
+#     ser.write((SMS_TEXT + "\x1A").encode())  # Send message with Ctrl+Z
+#     print("📨 Sending SMS...")
+#     time.sleep(5)
+# else:
+#     print("❌ Failed to get SMS prompt (no '>')")
 
 # === Done ===
 ser.close()
