@@ -9,7 +9,7 @@ BAUDRATE = 115200           # Default for SIM7070G
 PHONE_NUMBER = "+6980531698"  # Replace with your phone number
 MESSAGE = "Hello from Raspberry Pi and SIM7070G!"
 
-def send_at(command, expected_response, timeout=2):
+def send_at(command, expected_response, timeout=45):
     """Send AT command and wait for the expected response."""
     ser.write((command + '\r\n').encode())
     time.sleep(0.5)
@@ -30,7 +30,8 @@ time.sleep(1)
 
 # Initialize modem
 send_at("AT", "OK")
-send_at("ATE0", "OK")  # Echo off (optional)
+send_at("CREG?", "0,1")  # Check if modem is ready
+#send_at("ATE0", "OK")  # Echo off (optional)
 send_at("AT+CMGF=1", "OK")  # Set SMS text mode
 
 # Send the SMS
