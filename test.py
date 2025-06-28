@@ -38,7 +38,7 @@ send_at("AT+COPS=0", "OK")      # Auto operator selection
 def wait_network(timeout=120):
     print("⏳ Waiting for network...")
     start = time.time()
-    resp = b""
+    resp = ""
     while time.time() - start < timeout:
         resp += send_at("AT+CREG?", "+CREG", timeout=2)
         if "+CREG: 0,1" in resp or "+CREG: 0,5" in resp:
