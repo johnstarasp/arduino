@@ -4,7 +4,7 @@ import time
 # Replace with the correct serial port for your setup
 SERIAL_PORT = '/dev/serial0'  # or '/dev/serial0'
 BAUD_RATE = 115200
-PHONE_NUMBER = '+306980531698'  # Replace with the destination number
+PHONE_NUMBER = '+306946192873'  # Replace with the destination number
 MESSAGE = b'Hello from Raspberry Pi and SIM7070G!'
 
 def send_sms():
