@@ -23,13 +23,17 @@ def init_modem(ser):
     time.sleep(0.5)
     ser.write(b'AT+CMGF=1\r')  # Set SMS text mode
     time.sleep(0.5)
+    ser.write(b'AT+CFUN=1\r')  # Set SMS text mode
+    time.sleep(0.5)
+
+    
 
 def send_sms(ser, number, message):
     ser.write(f'AT+CMGS="{number}"\r'.encode())
-    time.sleep(0.5)
+    time.sleep(2)
     ser.write(f'{message}\x1A'.encode())  # Ctrl+Z
     print("SMS sent.")
-
+    time.sleep(5)
 # -----------------------------
 # MAIN LOOP
 # -----------------------------
