@@ -18,7 +18,7 @@ def send_sms():
         send_cmd('AT+CREG?')
         send_cmd('AT+CSQ')
         send_cmd('AT+CMGF=1')                # Set SMS mode to text
-        send_cmd('AT+CMGS="+306980531698"')
+        send_cmd('AT+CMGS="+306946192873"')
         time.sleep(5)
         ser.write(b'Hello from Raspberry Pi and SIM7070G!\x1A')  # \x1A is Ctrl+Z to send the message
         time.sleep(5)
