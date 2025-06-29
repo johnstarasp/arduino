@@ -3,7 +3,7 @@ import time
 
 PORT = '/dev/serial0'
 BAUD = 115200
-PHONE = '+306946192873'
+PHONE = '+306980531698'
 MESSAGE = 'Hello from Raspberry Pi and SIM7070G!'
 
 def send_sms():
@@ -18,6 +18,7 @@ def send_sms():
         at('AT')
         at('AT+CSQ')
         at('AT+CREG?')
+        at('AT+CFUN=1')
         at('AT+CMGF=1')        # Set SMS text mode
         at(f'AT+CMGS="{PHONE}"', wait=2)
         ser.write((MESSAGE + '\x1A').encode())
