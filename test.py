@@ -21,6 +21,7 @@ def send_sms():
         send_cmd(f'AT+CMGS="{PHONE_NUMBER}"')
         time.sleep(1)
         ser.write(b'Hello from Raspberry Pi and SIM7070G!\x1A')  # \x1A is Ctrl+Z to send the message
+        ser.write(26)
         time.sleep(3)
         print(ser.read_all().decode(errors='ignore'))
 
