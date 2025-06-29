@@ -7,22 +7,15 @@ from datetime import datetime
 # -----------------------------
 HALL_SENSOR_PIN = 17  # GPIO17 (pin 11)
 CIRCUMFERENCE = 0.5   # meters (wheel circumference)
-LOG_DATA = False       # Set to True if you want to log to CSV
+LOG_DATA = False      # Set to True to log speed data
 LOG_FILE = "bike_speed_log.csv"
+MEASUREMENT_INTERVAL = 1  # seconds
 
 # -----------------------------
-# Setup
+# GPIO Setup
 # -----------------------------
-pulse_count = 0
-last_time = time.time()
-
-def pulse_detected(channel):
-    global pulse_count
-    pulse_count += 1
-
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(HALL_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.add_event_detect(HALL_SENSOR_PIN, GPIO.FALLING, callback=pulse_detected, bouncetime=10)
 
 # -----------------------------
 # Logging Setup
@@ -36,10 +29,20 @@ if LOG_DATA:
 # -----------------------------
 try:
     print("Starting speedometer... Press Ctrl+C to stop.")
+    last_state = GPIO.input(HALL_SENSOR_PIN)
+
     while True:
-        start_time = time.time()
         pulse_count = 0
-        time.sleep(1)  # measure every second
+        start_time = time.time()
+
+        while (time.time() - start_time) < MEASUREMENT_INTERVAL:
+            current_state = GPIO.input(HALL_SENSOR_PIN)
+            if last_state == GPIO.HIGH and current_state == GPIO.LOW:
+                pulse_count += 1
+                time.sleep(0.01)  # basic debounce
+            last_state = current_state
+            time.sleep(0.001)
+
         elapsed_time = time.time() - start_time
 
         # Speed calculations
