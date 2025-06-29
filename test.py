@@ -1,28 +1,32 @@
 import serial
 import time
 
-# Replace with the correct serial port for your setup
-SERIAL_PORT = '/dev/serial0'  # or '/dev/serial0'
-BAUD_RATE = 115200
-PHONE_NUMBER = '+306946192873'  # Replace with the destination number
-MESSAGE = b'Hello from Raspberry Pi and SIM7070G!'
+PORT = '/dev/serial0'
+BAUD = 115200
+PHONE = '+306946192873'
+MESSAGE = 'Hello from Raspberry Pi and SIM7070G!'
 
 def send_sms():
-    with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
-        def send_cmd(cmd, delay=1):
+    with serial.Serial(PORT, BAUD, timeout=2) as ser:
+        def at(cmd, wait=1):
             ser.write((cmd + '\r\n').encode())
-            time.sleep(delay)
-            print(ser.read_all().decode())
+            time.sleep(wait)
+            resp = ser.read_all().decode(errors='ignore')
+            print(f'> {cmd}\n{resp}')
+            return resp
 
-        send_cmd('AT')                       # Check module is responding
-        send_cmd('AT+CREG?')
-        send_cmd('AT+CSQ')
-        send_cmd('AT+CMGF=1')                # Set SMS mode to text
-        send_cmd('AT+CMGS="+306946192873"')
+        at('AT')
+        at('AT+CPIN?')
+        at('AT+CSQ')
+        at('AT+CREG?')
+        at('AT+CSCA?')         # Check SMS center number
+        at('AT+CMGF=1')        # Set SMS text mode
+        at(f'AT+CMGS="{PHONE}"', wait=2)
+        ser.write((MESSAGE + '\x1A').encode())
         time.sleep(5)
-        ser.write(b'Hello from Raspberry Pi and SIM7070G!\x1A')  # \x1A is Ctrl+Z to send the message
-        time.sleep(5)
-        print(ser.read_all().decode())
+        resp = ser.read_all().decode(errors='ignore')
+        print(resp)
 
 if __name__ == '__main__':
     send_sms()
+
