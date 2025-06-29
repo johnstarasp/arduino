@@ -9,10 +9,11 @@ MESSAGE = b'Hello from Raspberry Pi and SIM7070G!'
 
 def send_sms():
     with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
+        ser.flush()
         def send_cmd(cmd, delay=1):
             ser.write((cmd + '\r\n').encode())
             time.sleep(delay)
-            print(ser.read_all().decode(errors='ignore'))
+            print(ser.read_all().decode())
 
         send_cmd('AT')                       # Check module is responding
         send_cmd('AT+CREG?')
@@ -23,7 +24,7 @@ def send_sms():
         ser.write(b'Hello from Raspberry Pi and SIM7070G!\x1A')  # \x1A is Ctrl+Z to send the message
         ser.write(26)
         time.sleep(3)
-        print(ser.read_all().decode(errors='ignore'))
+        print(ser.read_all().decode())
 
 if __name__ == '__main__':
     send_sms()
