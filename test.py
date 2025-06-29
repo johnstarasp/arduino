@@ -1,70 +1,26 @@
 import serial
 import time
 
-# === CONFIGURATION ===
-SERIAL_PORT = "/dev/serial0"        # Change if using UART (e.g. /dev/ttyS0)
-BAUDRATE = 115200
-PHONE_NUMBER = "+6980531698"        # <-- Replace with real number (international format)
-SMS_TEXT = "Hello from SIM7070G on Raspberry Pi!"
+# Replace with the correct serial port for your setup
+SERIAL_PORT = '/dev/serial0'  # or '/dev/serial0'
+BAUD_RATE = 115200
+PHONE_NUMBER = '+6980531698'  # Replace with the destination number
+MESSAGE = 'Hello from Raspberry Pi and SIM7070G!'
 
+def send_sms():
+    with serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=1) as ser:
+        def send_cmd(cmd, delay=1):
+            ser.write((cmd + '\r\n').encode())
+            time.sleep(delay)
+            print(ser.read_all().decode(errors='ignore'))
 
-# === Open serial port ===
-ser = serial.Serial(SERIAL_PORT, BAUDRATE, timeout=1)
-time.sleep(1)
+        send_cmd('AT')                       # Check module is responding
+        send_cmd('AT+CMGF=1')                # Set SMS mode to text
+        send_cmd(f'AT+CMGS="{PHONE_NUMBER}"')
+        time.sleep(1)
+        ser.write((MESSAGE + '\x1A').encode())  # \x1A is Ctrl+Z to send the message
+        time.sleep(3)
+        print(ser.read_all().decode(errors='ignore'))
 
-# === Function to send AT command and read response ===
-def send_at(command, expected=None, timeout=3):
-    ser.write((command + "\r\n").encode())
-    time.sleep(0.5)
-    # end_time = time.time() + timeout
-    # response = ""
-    # while time.time() < end_time:
-    #     if ser.in_waiting:
-    #         response += ser.read(ser.in_waiting).decode(errors="ignore")
-    #         if expected and expected in response:
-    #             break
-    # print(f">>> {command}")
-    # print(response.strip())
-    # return response.strip()
-
-# === Wait for network registration ===
-def wait_for_network(timeout=120):
-    print("⏳ Waiting for network registration...")
-    start_time = time.time()
-    while time.time() - start_time < timeout:
-        send_at("AT+CREG?", "+CREG", timeout=2)
-    #     if "+CREG: 0,1" in resp or "+CREG: 0,5" in resp:
-    #         print("✅ Network registered!")
-    #         return True
-    #     time.sleep(3)
-    # print("❌ Network registration failed.")
-    return True
-
-
-# === STEP 1: Modem Initialization ===
-send_at("AT", "OK")
-send_at("ATE0", "OK")            # Disable echo
-send_at("AT+CMEE=2", "OK")       # Verbose error messages
-send_at("AT+CPIN?", "READY")     # Check SIM card
-send_at("AT+CFUN=1", "OK")       # Full functionality
-send_at("AT+COPS=0", "OK")       # Auto operator selection
-
-# === STEP 2: Wait for Network ===
-# if not wait_for_network():
-#     ser.close()
-#     raise SystemExit("❌ Could not register on network. Exiting.")
-
-# === STEP 3: Send SMS ===
-send_at("AT+CMGF=1", "OK")       # Text mode
-send_at(f'AT+CMGS="{PHONE_NUMBER}"', ">", timeout=5)
-send_at("AT+CREG?", "+CREG", timeout=2)
-# if ">" in response:
-#     ser.write((SMS_TEXT + "\x1A").encode())  # Send message with Ctrl+Z
-#     print("📨 Sending SMS...")
-#     time.sleep(5)
-# else:
-#     print("❌ Failed to get SMS prompt (no '>')")
-ser.write((SMS_TEXT + "\x1A").encode()) 
-# === Done ===
-ser.close()
-print("✅ Done. SMS should be sent.")
+if __name__ == '__main__':
+    send_sms()
