@@ -16,7 +16,7 @@ def send_sms():
 
         send_cmd('AT')                       # Check module is responding
         send_cmd('AT+CREG?')
-        send_cmd("AT+CFUN=1")
+
         send_cmd('AT+CMGF=1')                # Set SMS mode to text
         send_cmd(f'AT+CMGS="{PHONE_NUMBER}"')
         time.sleep(1)

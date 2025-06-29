@@ -2,7 +2,7 @@ import serial
 import time
 
 # Open UART connection (use GPIO UART: /dev/serial0)
-sim7070 = serial.Serial('/dev/serial0', baudrate=19200, timeout=1)
+sim7070 = serial.Serial('/dev/serial0', baudrate=115200, timeout=1)
 
 def send_command(cmd, timeout=5):
     """Send AT command and wait for full response (any kind)."""
