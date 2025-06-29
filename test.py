@@ -64,7 +64,7 @@ send_at("AT+CREG?", "+CREG", timeout=2)
 #     time.sleep(5)
 # else:
 #     print("❌ Failed to get SMS prompt (no '>')")
-
+ser.write((SMS_TEXT + "\x1A").encode()) 
 # === Done ===
 ser.close()
 print("✅ Done. SMS should be sent.")
