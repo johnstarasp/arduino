@@ -4,7 +4,7 @@ import time
 # === CONFIGURATION ===
 SERIAL_PORT = "/dev/serial0"        # Change if using UART (e.g. /dev/ttyS0)
 BAUDRATE = 115200
-PHONE_NUMBER = "+1234567890"        # <-- Replace with real number (international format)
+PHONE_NUMBER = "+6980531698"        # <-- Replace with real number (international format)
 SMS_TEXT = "Hello from SIM7070G on Raspberry Pi!"
 
 
