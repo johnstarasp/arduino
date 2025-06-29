@@ -20,8 +20,7 @@ def send_sms():
         at('AT+CREG?')
         at('AT+CFUN=1')
         at('AT+CMGF=1')        # Set SMS text mode
-        at(f'AT+CMGS="{PHONE}"', wait=2)
-        time.sleep(3)
+        at(f'AT+CMGS="{PHONE}"', wait=3)
         ser.write((MESSAGE + '\x1A').encode())
         time.sleep(5)
         resp = ser.read_all().decode(errors='ignore')
