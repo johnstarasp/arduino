@@ -50,9 +50,9 @@ send_at("AT+CFUN=1", "OK")       # Full functionality
 send_at("AT+COPS=0", "OK")       # Auto operator selection
 
 # === STEP 2: Wait for Network ===
-if not wait_for_network():
-    ser.close()
-    raise SystemExit("❌ Could not register on network. Exiting.")
+# if not wait_for_network():
+#     ser.close()
+#     raise SystemExit("❌ Could not register on network. Exiting.")
 
 # === STEP 3: Send SMS ===
 send_at("AT+CMGF=1", "OK")       # Text mode
