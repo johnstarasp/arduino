@@ -16,12 +16,9 @@ def send_sms():
             return resp
 
         at('AT')
-        at('AT+CPIN?')
         at('AT+CSQ')
         at('AT+CREG?')
-        at('AT+CSCA?')         # Check SMS center number
         at('AT+CMGF=1')        # Set SMS text mode
-        at("AT+CSCA='+306971000000'")
         at(f'AT+CMGS="{PHONE}"', wait=2)
         ser.write((MESSAGE + '\x1A').encode())
         time.sleep(5)
