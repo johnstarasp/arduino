@@ -12,8 +12,10 @@ from datetime import datetime
 HALL_SENSOR_PIN = 17
 CIRCUMFERENCE = 0.5  # meters
 SMS_PHONE_NUMBER = "+306980531698"  # Replace with your phone number
-SERIAL_PORT = "/dev/serial0"  # or "/dev/ttyS0" depending on your setup
-BAUD_RATE = 115200
+# Raspberry Pi 2 uses /dev/ttyAMA0 for UART
+# Make sure to disable bluetooth on Pi 3+ or use /dev/serial0
+SERIAL_PORT = "/dev/serial0"  # For Pi 2, use /dev/ttyAMA0
+BAUD_RATE = 9600  # Lower baud rate for better compatibility
 SMS_INTERVAL = 10  # seconds
 DEBOUNCE_TIME = 0.05  # seconds
 MAX_RETRIES = 3
@@ -23,13 +25,24 @@ SPEED_HISTORY_SIZE = 10
 # SETUP
 # -----------------------------
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    level=logging.DEBUG,  # Changed to DEBUG for better troubleshooting
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('/tmp/bike_speedometer.log')
+    ]
 )
 logger = logging.getLogger(__name__)
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(HALL_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+# Initialize GPIO with error handling
+try:
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setup(HALL_SENSOR_PIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+    logger.info(f"GPIO initialized successfully on pin {HALL_SENSOR_PIN}")
+except Exception as e:
+    logger.error(f"Failed to initialize GPIO: {e}")
+    logger.error("Make sure you're running with sudo and GPIO is available")
+    raise
 
 class ModemManager:
     def __init__(self, serial_port, baud_rate):
@@ -40,11 +53,30 @@ class ModemManager:
         
     def connect(self):
         try:
-            self.ser = serial.Serial(self.serial_port, self.baud_rate, timeout=1)
-            time.sleep(2)
-            return True
-        except serial.SerialException as e:
-            logger.error(f"Failed to open serial port: {e}")
+            # Try multiple serial ports for compatibility
+            ports_to_try = [self.serial_port, "/dev/ttyS0", "/dev/serial0", "/dev/ttyAMA0"]
+            for port in ports_to_try:
+                try:
+                    logger.info(f"Trying to connect to {port}...")
+                    self.ser = serial.Serial(port, self.baud_rate, timeout=2)
+                    time.sleep(2)
+                    # Test connection with AT command
+                    self.ser.write(b'AT\r')
+                    time.sleep(0.5)
+                    response = self.ser.read(100).decode('utf-8', errors='ignore')
+                    if 'OK' in response or 'AT' in response:
+                        logger.info(f"Successfully connected to modem on {port}")
+                        self.serial_port = port
+                        return True
+                    else:
+                        self.ser.close()
+                except (serial.SerialException, OSError) as e:
+                    logger.debug(f"Failed to connect on {port}: {e}")
+                    continue
+            logger.error("Failed to connect to modem on any port")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error connecting to modem: {e}")
             return False
     
     def init_modem(self):
@@ -63,14 +95,26 @@ class ModemManager:
     def _send_at_command(self, command, description=""):
         with self.lock:
             try:
+                if not self.ser or not self.ser.is_open:
+                    logger.error("Serial port not open")
+                    return False
+                    
+                # Clear input buffer before sending
+                self.ser.reset_input_buffer()
                 self.ser.write(command)
-                time.sleep(0.5)
-                response = self.ser.read(100).decode('utf-8', errors='ignore')
+                time.sleep(1)  # Give more time for response
+                response = self.ser.read(500).decode('utf-8', errors='ignore')
+                logger.debug(f"Command: {command.decode('utf-8', errors='ignore').strip()}")
+                logger.debug(f"Response: {response}")
+                
                 if 'OK' in response:
                     logger.info(f"{description}: Success")
                     return True
                 elif 'ERROR' in response:
                     logger.error(f"{description}: Failed - {response}")
+                    return False
+                elif not response:
+                    logger.warning(f"{description}: No response")
                     return False
                 return True
             except Exception as e:
@@ -154,20 +198,37 @@ def format_sms_message(speed_kph, avg_speed, pulses, timestamp):
 
 def main():
     logger.info("Starting enhanced bike speedometer...")
+    logger.info(f"Configuration:")
+    logger.info(f"  Hall Sensor Pin: {HALL_SENSOR_PIN}")
+    logger.info(f"  Wheel Circumference: {CIRCUMFERENCE}m")
+    logger.info(f"  SMS Interval: {SMS_INTERVAL}s")
+    logger.info(f"  Serial Port: {SERIAL_PORT}")
+    logger.info(f"  Baud Rate: {BAUD_RATE}")
+    
+    # Test GPIO first
+    try:
+        test_state = GPIO.input(HALL_SENSOR_PIN)
+        logger.info(f"Initial GPIO pin state: {test_state}")
+    except Exception as e:
+        logger.error(f"Failed to read GPIO pin: {e}")
+        return
     
     modem = ModemManager(SERIAL_PORT, BAUD_RATE)
     sensor = SpeedSensor(HALL_SENSOR_PIN, CIRCUMFERENCE)
     
-    if not modem.connect():
-        logger.error("Failed to connect to modem. Exiting.")
-        return
-    
-    if not modem.init_modem():
-        logger.error("Failed to initialize modem. Continuing without SMS...")
-        modem_available = False
-    else:
-        modem_available = True
-        logger.info("Modem initialized successfully")
+    # Make modem optional - continue even if it fails
+    modem_available = False
+    try:
+        if modem.connect():
+            modem_available = modem.init_modem()
+            if modem_available:
+                logger.info("Modem connected and initialized")
+            else:
+                logger.warning("Modem connected but initialization failed")
+        else:
+            logger.warning("Could not connect to modem - continuing without SMS capability")
+    except Exception as e:
+        logger.warning(f"Modem setup failed: {e} - continuing without SMS")
     
     consecutive_failures = 0
     max_consecutive_failures = 5
@@ -179,11 +240,19 @@ def main():
             last_state = GPIO.input(HALL_SENSOR_PIN)
             start_time = time.time()
             
+            pulse_check_count = 0
             while (time.time() - start_time) < SMS_INTERVAL:
-                current_state = GPIO.input(HALL_SENSOR_PIN)
-                sensor.detect_pulse(last_state, current_state)
-                last_state = current_state
-                time.sleep(0.001)
+                try:
+                    current_state = GPIO.input(HALL_SENSOR_PIN)
+                    sensor.detect_pulse(last_state, current_state)
+                    last_state = current_state
+                    pulse_check_count += 1
+                    time.sleep(0.001)
+                except Exception as e:
+                    logger.error(f"Error reading GPIO: {e}")
+                    break
+            
+            logger.debug(f"Checked GPIO {pulse_check_count} times in {SMS_INTERVAL} seconds")
             
             elapsed_time = time.time() - start_time
             speed_kph, avg_speed, pulses = sensor.calculate_speed(elapsed_time)
@@ -216,10 +285,21 @@ def main():
         logger.info("\nStopping program...")
     except Exception as e:
         logger.error(f"Unexpected error: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
     finally:
-        GPIO.cleanup()
-        modem.close()
-        logger.info("Cleanup complete")
+        try:
+            GPIO.cleanup()
+            logger.info("GPIO cleanup complete")
+        except:
+            pass
+        try:
+            if modem:
+                modem.close()
+                logger.info("Modem closed")
+        except:
+            pass
+        logger.info("Program terminated")
 
 if __name__ == "__main__":
     main()
