@@ -58,6 +58,28 @@ class SIM7070G:
         response = self.send_at_command("AT+CMGF=1")
         return "OK" in response
         
+    def initialize_sms(self):
+        print("Initializing SMS configuration...")
+        
+        # Set SMS text mode
+        if not self.set_sms_text_mode():
+            print("Failed to set SMS text mode")
+            return False
+            
+        # Set SMS storage to SIM
+        response = self.send_at_command("AT+CPMS=\"SM\",\"SM\",\"SM\"")
+        print(f"SMS storage config: {response}")
+        
+        # Set SMS character set
+        response = self.send_at_command("AT+CSCS=\"GSM\"")
+        print(f"Character set: {response}")
+        
+        # Check SMS service center (should be auto-configured)
+        response = self.send_at_command("AT+CSCA?")
+        print(f"SMS service center: {response}")
+        
+        return True
+
     def send_sms(self, phone_number, message):
         if not self.check_connection():
             print("AT command test failed")
@@ -68,8 +90,8 @@ class SIM7070G:
             self.ser.read(self.ser.in_waiting)
             time.sleep(0.1)
             
-        if not self.set_sms_text_mode():
-            print("Failed to set SMS text mode")
+        if not self.initialize_sms():
+            print("Failed to initialize SMS")
             return False
             
         self.check_signal_strength()
