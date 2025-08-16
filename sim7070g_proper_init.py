@@ -9,7 +9,7 @@ import time
 import os
 
 SERIAL_PORT = "/dev/ttyS0"
-PHONE_NUMBER = "00306980531698"
+PHONE_NUMBER = "+306980531698"
 
 def try_baud_rates():
     """Try different baud rates as SIM7070G has auto-bauding"""
