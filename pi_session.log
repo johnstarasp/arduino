@@ -1,0 +1,12 @@
+spawn ssh jstaras@192.168.1.48
+jstaras@192.168.1.48's password: 
+Linux raspberrypi 6.12.25+rpt-rpi-v8 #1 SMP PREEMPT Debian 1:6.12.25-1+rpt1 (2025-04-30) aarch64
+
+The programs included with the Debian GNU/Linux system are free software;
+the exact distribution terms for each program are described in the
+individual files in /usr/share/doc/*/copyright.
+
+Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+permitted by applicable law.
+Last login: Sat Aug 16 12:25:58 2025 from 192.168.1.249
+[?2004h]0;jstaras@raspberrypi: ~[01;32mjstaras@raspberrypi[00m:[01;34m~ $[00m 

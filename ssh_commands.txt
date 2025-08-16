@@ -1,0 +1,54 @@
+After connecting to SSH, run these commands:
+
+1. First, find where your arduino files are:
+   ls -la ~/
+   find ~/ -name "firstTry.py" 2>/dev/null
+
+2. Navigate to the correct directory (replace with the path you find):
+   cd [directory_with_firstTry.py]
+
+3. Create the test script to find your modem:
+   sudo nano test_modem.py
+
+4. Paste this content:
+
+import serial
+import time
+
+ports = ["/dev/serial0", "/dev/ttyS0", "/dev/ttyAMA0", "/dev/ttyUSB0", "/dev/ttyUSB1", "/dev/ttyACM0"]
+bauds = [9600, 115200]
+
+print("Searching for modem...")
+for port in ports:
+    for baud in bauds:
+        try:
+            print(f"Testing {port} @ {baud}...")
+            ser = serial.Serial(port, baud, timeout=2)
+            time.sleep(1)
+            ser.write(b'AT\r\n')
+            time.sleep(0.5)
+            resp = ser.read(100).decode('utf-8', errors='ignore')
+            if 'OK' in resp:
+                print(f"FOUND: {port} @ {baud} baud")
+                ser.write(b'AT+CSQ\r\n')
+                time.sleep(0.5)
+                print("Signal:", ser.read(100).decode('utf-8', errors='ignore'))
+                ser.close()
+                exit(0)
+            ser.close()
+        except:
+            pass
+print("No modem found")
+
+5. Save and run:
+   sudo python3 test_modem.py
+
+6. Once you find the modem port, update firstTry.py:
+   sudo nano firstTry.py
+
+   Change these lines:
+   SERIAL_PORT = "[your_modem_port]"  # e.g., "/dev/ttyUSB0"
+   BAUD_RATE = [your_baud_rate]  # e.g., 9600 or 115200
+
+7. Run the updated script:
+   sudo python3 firstTry.py
