@@ -63,6 +63,11 @@ class SIM7070G:
             print("AT command test failed")
             return False
             
+        # Clear any pending data
+        while self.ser.in_waiting > 0:
+            self.ser.read(self.ser.in_waiting)
+            time.sleep(0.1)
+            
         if not self.set_sms_text_mode():
             print("Failed to set SMS text mode")
             return False
@@ -70,26 +75,49 @@ class SIM7070G:
         self.check_signal_strength()
         self.check_network_registration()
         
+        # Clear buffer again
+        while self.ser.in_waiting > 0:
+            self.ser.read(self.ser.in_waiting)
+            time.sleep(0.1)
+        
+        print(f"Sending AT+CMGS command...")
         at_command = f'AT+CMGS="{phone_number}"'
-        response = self.send_at_command(at_command, wait_time=1)
+        self.ser.write((at_command + '\r\n').encode())
+        
+        # Wait for prompt with longer timeout
+        response = ""
+        start_time = time.time()
+        while time.time() - start_time < 10:
+            if self.ser.in_waiting > 0:
+                new_data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
+                response += new_data
+                print(f"Received: '{new_data.strip()}'")
+            time.sleep(0.2)
+            if ">" in response:
+                break
+        
+        print(f"Full response to CMGS: '{response.strip()}'")
         
         if ">" not in response:
-            print(f"Failed to initiate SMS send: {response}")
+            print(f"Failed to get SMS prompt. Response: '{response.strip()}'")
             return False
             
+        print("Got SMS prompt, sending message...")
         self.ser.write((message + '\x1A').encode())
-        time.sleep(5)
         
+        # Wait for final response
         response = ""
         start_time = time.time()
         while time.time() - start_time < 30:
             if self.ser.in_waiting > 0:
-                response += self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
-            time.sleep(0.1)
+                new_data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
+                response += new_data
+                print(f"SMS Response: '{new_data.strip()}'")
+            time.sleep(0.2)
             if "OK" in response or "ERROR" in response:
                 break
                 
-        print(f"SMS send response: {response}")
+        print(f"Final SMS send response: '{response.strip()}'")
         return "OK" in response
 
 def main():
