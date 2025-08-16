@@ -48,6 +48,21 @@ def main():
                     raise e
                 print(f"   Connection attempt {attempt + 1} failed, retrying...")
                 time.sleep(2)
+                
+        # SIM7070G specific wake-up sequence
+        print("Initializing SIM7070G modem...")
+        for i in range(5):
+            ser.write(b'AT\r\n')
+            time.sleep(0.5)
+            response = ser.read(100).decode('utf-8', errors='ignore')
+            if 'OK' in response:
+                print(f"   Modem responded after {i+1} attempts")
+                break
+            print(f"   Wake-up attempt {i+1}...")
+        
+        # Clear any pending messages
+        ser.reset_input_buffer()
+        ser.reset_output_buffer()
         
         # Test basic connection
         print("\n1. Testing modem connection:")
@@ -57,6 +72,24 @@ def main():
         if 'OK' not in resp:
             print("   ✗ Modem not responding")
             return
+            
+        # SIM7070G specific configuration
+        print("\n1.1. SIM7070G Network Configuration:")
+        
+        # Set network preferences for SMS reliability
+        print("   Setting network mode for SMS compatibility...")
+        resp = send_command(ser, "AT+CNMP=38", 2)  # LTE only mode
+        print(f"   Network mode: {resp}")
+        
+        resp = send_command(ser, "AT+CMNB=1", 2)   # CAT-M preferred
+        print(f"   Network band: {resp}")
+        
+        # Enable all URCs for better diagnostics
+        resp = send_command(ser, "AT+CREG=2", 1)
+        print(f"   Enhanced registration: {resp}")
+        
+        resp = send_command(ser, "AT+CGREG=2", 1)
+        print(f"   Packet registration: {resp}")
         
         # Get modem info
         print("\n2. Modem information:")
@@ -218,6 +251,43 @@ def main():
         resp = send_command(ser, "AT+CSCA?", 1)
         print(f"   SMS center: {resp}")
         
+        # Check if SMS center needs configuration
+        if not resp or '+CSCA:' not in resp or '""' in resp:
+            print("   ⚠ SMS center not configured or empty")
+            print("   Attempting to set Greek SMS center...")
+            # Common Greek SMS centers
+            greek_sms_centers = [
+                "+3097100000",  # COSMOTE
+                "+3094969300",  # WIND
+                "+3093093093"   # VODAFONE
+            ]
+            
+            for center in greek_sms_centers:
+                resp = send_command(ser, f'AT+CSCA="{center}",145', 2)
+                print(f"   Setting SMS center {center}: {resp}")
+                if 'OK' in resp:
+                    print(f"   ✓ SMS center set to {center}")
+                    break
+        
+        # Additional SMS configuration for SIM7070G
+        print("\n6.1. Advanced SMS Configuration:")
+        
+        # Set SMS format
+        resp = send_command(ser, "AT+CMGF=1", 1)
+        print(f"   Text format: {resp}")
+        
+        # Configure SMS storage
+        resp = send_command(ser, "AT+CPMS=\"SM\",\"SM\",\"SM\"", 2)
+        print(f"   SMS storage: {resp}")
+        
+        # Check SMS configuration
+        resp = send_command(ser, "AT+CSMP?", 1)
+        print(f"   SMS parameters: {resp}")
+        
+        # Set SMS validity period and other params for Greek networks
+        resp = send_command(ser, "AT+CSMP=17,167,0,0", 1)
+        print(f"   SMS params set: {resp}")
+        
         # Final summary
         print("\n" + "="*50)
         print("SUMMARY")
@@ -289,6 +359,18 @@ def main():
         print("4. Type your message")
         print("5. Press Ctrl+A then Z, then press Ctrl+Z")
         print("6. Press Ctrl+A then X to exit minicom")
+        
+        print("\\n" + "="*50)
+        print("SIM7070G TROUBLESHOOTING NOTES")
+        print("="*50)
+        print("• SIM7070G requires specific SMS center configuration")
+        print("• Greek networks: COSMOTE (+3097100000), WIND (+3094969300)")
+        print("• Module may need multiple AT commands to wake up")
+        print("• CAT-M/NB-IoT mode preferred over 2G for SMS reliability")
+        print("• Check if SIM works in 2G/3G phone vs LTE-only phone")
+        print("• Try: AT+CSCA=\\"+3097100000\\",145 to set SMS center")
+        print("• Try: AT+CNMP=38 for LTE-only mode")
+        print("• Try: AT+CMNB=1 for CAT-M preference")
         
         ser.close()
         
