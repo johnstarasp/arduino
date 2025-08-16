@@ -4,7 +4,7 @@ import time
 import sys
 
 class SIM7070G:
-    def __init__(self, port='/dev/ttyUSB0', baudrate=115200, timeout=10):
+    def __init__(self, port='/dev/serial0', baudrate=115200, timeout=10):
         self.port = port
         self.baudrate = baudrate
         self.timeout = timeout
