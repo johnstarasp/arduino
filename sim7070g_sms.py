@@ -104,21 +104,38 @@ class SIM7070G:
             
         print("Got SMS prompt, sending message...")
         self.ser.write((message + '\x1A').encode())
+        time.sleep(1)  # Give module time to process
         
-        # Wait for final response
+        # Wait for final response with extended timeout
         response = ""
         start_time = time.time()
-        while time.time() - start_time < 30:
+        print("Waiting for SMS send confirmation...")
+        
+        while time.time() - start_time < 60:  # Extended to 60 seconds
             if self.ser.in_waiting > 0:
                 new_data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
                 response += new_data
                 print(f"SMS Response: '{new_data.strip()}'")
-            time.sleep(0.2)
-            if "OK" in response or "ERROR" in response:
-                break
                 
+                # Check for success indicators
+                if "+CMGS:" in response and "OK" in response:
+                    print("SMS sent successfully!")
+                    return True
+                elif "ERROR" in response:
+                    print("SMS send failed with ERROR")
+                    return False
+                    
+            time.sleep(0.5)  # Longer polling interval
+            
         print(f"Final SMS send response: '{response.strip()}'")
-        return "OK" in response
+        
+        # If we got a +CMGS response, consider it successful even without OK
+        if "+CMGS:" in response:
+            print("Got +CMGS response, SMS likely sent")
+            return True
+            
+        print("SMS send timeout - no response received")
+        return False
 
 def main():
     phone_number = "+306976518415"
