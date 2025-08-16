@@ -16,8 +16,15 @@ def send_command(ser, cmd, wait=1):
     ser.reset_output_buffer()
     ser.write(cmd.encode() + b'\r\n')
     time.sleep(wait)
-    response = ser.read(500).decode('utf-8', errors='ignore')
-    return response.strip()
+    response = ser.read(1000).decode('utf-8', errors='ignore')
+    # Clean up response - remove echoed command and extra whitespace
+    lines = response.strip().split('\n')
+    cleaned_lines = []
+    for line in lines:
+        line = line.strip()
+        if line and line != cmd and not line.startswith('DST:') and not line.startswith('*PSUTTZ:'):
+            cleaned_lines.append(line)
+    return '\n'.join(cleaned_lines)
 
 def main():
     print("="*50)
@@ -52,6 +59,13 @@ def main():
         
         resp = send_command(ser, "AT+CPIN?", 2)
         print(f"   SIM PIN status: {resp}")
+        
+        # Handle empty response
+        if not resp or resp == 'AT+CPIN?':
+            print("   ⚠ Empty response, trying again...")
+            time.sleep(2)
+            resp = send_command(ser, "AT+CPIN?", 3)
+            print(f"   SIM PIN status (retry): {resp}")
         
         if 'SIM PIN' in resp:
             print("   → SIM requires PIN code")
@@ -124,10 +138,15 @@ def main():
                 if rssi == 99:
                     print("   ⚠ No signal detected")
                     print("   Check antenna connection!")
+                    print("   Note: SMS may still work if registered on network")
                 elif rssi < 10:
                     print(f"   ⚠ Weak signal (RSSI: {rssi})")
                 else:
                     print(f"   ✓ Good signal (RSSI: {rssi})")
+            else:
+                print("   ⚠ Could not parse signal strength")
+        else:
+            print("   ⚠ No signal information available")
         
         resp = send_command(ser, "AT+CREG?", 1)
         print(f"   Registration: {resp}")
@@ -160,27 +179,53 @@ def main():
         
         # Check final SIM status
         resp = send_command(ser, "AT+CPIN?", 1)
-        if 'READY' in resp:
+        
+        # Handle empty response in final check
+        if not resp or resp == 'AT+CPIN?':
+            print("⚠ SIM status check returned empty, trying alternative method...")
+            # Try alternative SIM check
+            resp = send_command(ser, "AT+CIMI", 2)
+            if resp and len(resp) > 10 and resp.isdigit():
+                print("✓ SIM card is ready (verified via IMSI)")
+                sim_ready = True
+            else:
+                print("✗ SIM card not responding")
+                sim_ready = False
+        elif 'READY' in resp:
             print("✓ SIM card is ready")
+            sim_ready = True
+        else:
+            print(f"✗ SIM still not ready: {resp}")
+            sim_ready = False
             
+        if sim_ready:
             # Quick SMS test
             print("\nTrying quick SMS test...")
+            ser.reset_input_buffer()
             ser.write(b'AT+CMGS="+306976518415"\r\n')
-            time.sleep(1)
-            resp = ser.read(100).decode('utf-8', errors='ignore')
+            time.sleep(2)
+            resp = ser.read(200).decode('utf-8', errors='ignore')
             
             if '>' in resp:
                 print("✓ SMS prompt received - modem ready for SMS!")
                 ser.write(b'\x1B')  # Cancel
+                time.sleep(1)
+                ser.read(100)  # Clear any remaining response
             else:
                 print(f"✗ SMS test failed: {resp}")
+                # Try to check SMS center configuration
+                sms_center_resp = send_command(ser, "AT+CSCA?", 1)
+                if '+CSCA:' in sms_center_resp:
+                    print(f"   SMS center is configured: {sms_center_resp}")
+                else:
+                    print("   ⚠ SMS center may not be configured")
         else:
-            print(f"✗ SIM still not ready: {resp}")
             print("\nTroubleshooting steps:")
             print("1. Check SIM card is properly inserted")
             print("2. Try a different SIM card")
             print("3. Check SIM card is not damaged")
             print("4. Ensure SIM card is compatible with your network")
+            print("5. Wait longer for SIM initialization (up to 2 minutes)")
         
         ser.close()
         
