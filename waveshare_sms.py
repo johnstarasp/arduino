@@ -180,25 +180,29 @@ class WaveshareSIM7070G:
         """Send SMS message"""
         print(f"Sending SMS to {phone_number}: '{message}'")
         
+        # Clear any pending data first
+        while self.ser.in_waiting > 0:
+            old_data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
+            print(f"Clearing old data: {old_data.strip()}")
+            time.sleep(0.1)
+        
         # Initialize AT+CMGS command
         cmd = f'AT+CMGS="{phone_number}"'
-        self.ser.reset_input_buffer()
-        self.ser.write((cmd + '\r\n').encode('utf-8'))
+        print(f"Sending command: {cmd}")
         
-        # Wait for '>' prompt
-        response = ""
-        start_time = time.time()
-        while time.time() - start_time < 10:
-            if self.ser.in_waiting > 0:
-                data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
-                response += data
-                print(f"Response: {data.strip()}")
-            if ">" in response:
-                break
-            time.sleep(0.2)
-            
+        # Use the send_at_command method instead of manual approach
+        response = self.send_at_command(cmd, wait_time=5, expected_response=">")
+        print(f"CMGS command response: '{response.strip()}'")
+        
         if ">" not in response:
-            print(f"Failed to get SMS prompt: {response}")
+            print(f"Failed to get SMS prompt. Full response: '{response}'")
+            
+            # Check for specific error
+            if "ERROR" in response:
+                print("SMS command returned ERROR - check network and service center configuration")
+            elif not response.strip():
+                print("No response to SMS command - module may be busy or unresponsive")
+            
             return False
             
         print("✓ Got SMS prompt, sending message...")
