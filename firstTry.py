@@ -14,8 +14,8 @@ CIRCUMFERENCE = 0.5  # meters
 SMS_PHONE_NUMBER = "+306980531698"  # Replace with your phone number
 # Raspberry Pi 2 uses /dev/ttyAMA0 for UART
 # Make sure to disable bluetooth on Pi 3+ or use /dev/serial0
-SERIAL_PORT = "/dev/serial0"  # For Pi 2, use /dev/ttyAMA0
-BAUD_RATE = 9600  # Lower baud rate for better compatibility
+SERIAL_PORT = "/dev/serial0"  # SIMCOM SIM7070 detected
+BAUD_RATE = 57600  # Correct baud rate for SIM7070
 SMS_INTERVAL = 10  # seconds
 DEBOUNCE_TIME = 0.05  # seconds
 MAX_RETRIES = 3
