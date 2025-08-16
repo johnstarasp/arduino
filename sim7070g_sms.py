@@ -56,7 +56,23 @@ class SIM7070G:
         
     def set_sms_text_mode(self):
         response = self.send_at_command("AT+CMGF=1")
+        print(f"SMS text mode response: {response}")
         return "OK" in response
+        
+    def check_sms_service(self):
+        # Check SMS service center
+        response = self.send_at_command("AT+CSCA?")
+        print(f"SMS service center: {response}")
+        
+        # Check SMS storage
+        response = self.send_at_command("AT+CPMS?")
+        print(f"SMS storage: {response}")
+        
+        # Check network operator
+        response = self.send_at_command("AT+COPS?")
+        print(f"Network operator: {response}")
+        
+        return True
         
     def send_sms(self, phone_number, message):
         if not self.check_connection():
@@ -74,6 +90,7 @@ class SIM7070G:
             
         self.check_signal_strength()
         self.check_network_registration()
+        self.check_sms_service()
         
         # Clear buffer again
         while self.ser.in_waiting > 0:
@@ -82,19 +99,32 @@ class SIM7070G:
         
         print(f"Sending AT+CMGS command...")
         at_command = f'AT+CMGS="{phone_number}"'
-        self.ser.write((at_command + '\r\n').encode())
         
-        # Wait for prompt with longer timeout
-        response = ""
-        start_time = time.time()
-        while time.time() - start_time < 10:
-            if self.ser.in_waiting > 0:
-                new_data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
-                response += new_data
-                print(f"Received: '{new_data.strip()}'")
-            time.sleep(0.2)
-            if ">" in response:
-                break
+        # Use the standard send_at_command method first
+        response = self.send_at_command(at_command, wait_time=3)
+        print(f"CMGS response via send_at_command: '{response.strip()}'")
+        
+        # If that didn't work, try manual approach
+        if ">" not in response:
+            print("Trying manual CMGS command...")
+            # Clear buffer
+            while self.ser.in_waiting > 0:
+                self.ser.read(self.ser.in_waiting)
+                time.sleep(0.1)
+            
+            self.ser.write((at_command + '\r\n').encode())
+            
+            # Wait for prompt with longer timeout
+            response = ""
+            start_time = time.time()
+            while time.time() - start_time < 10:
+                if self.ser.in_waiting > 0:
+                    new_data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
+                    response += new_data
+                    print(f"Manual received: '{new_data.strip()}'")
+                time.sleep(0.2)
+                if ">" in response:
+                    break
         
         print(f"Full response to CMGS: '{response.strip()}'")
         
