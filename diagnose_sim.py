@@ -368,7 +368,7 @@ def main():
         print("• Module may need multiple AT commands to wake up")
         print("• CAT-M/NB-IoT mode preferred over 2G for SMS reliability")
         print("• Check if SIM works in 2G/3G phone vs LTE-only phone")
-        print("• Try: AT+CSCA=\\"+3097100000\\",145 to set SMS center")
+        print("• Try: AT+CSCA=\\\"+3097100000\\\",145 to set SMS center")
         print("• Try: AT+CNMP=38 for LTE-only mode")
         print("• Try: AT+CMNB=1 for CAT-M preference")
         
