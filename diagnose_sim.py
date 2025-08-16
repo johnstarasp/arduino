@@ -37,8 +37,17 @@ def main():
     
     try:
         print("Connecting to modem...")
-        ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=5)
-        time.sleep(3)
+        # Try multiple times for better reliability
+        for attempt in range(3):
+            try:
+                ser = serial.Serial(SERIAL_PORT, BAUD_RATE, timeout=5)
+                time.sleep(3)
+                break
+            except Exception as e:
+                if attempt == 2:
+                    raise e
+                print(f"   Connection attempt {attempt + 1} failed, retrying...")
+                time.sleep(2)
         
         # Test basic connection
         print("\n1. Testing modem connection:")
@@ -129,34 +138,61 @@ def main():
         resp = send_command(ser, "AT+CSQ", 1)
         print(f"   Signal: {resp}")
         
-        # Parse signal strength
-        if '+CSQ:' in resp:
-            import re
-            match = re.search(r'\+CSQ:\s*(\d+),(\d+)', resp)
-            if match:
-                rssi = int(match.group(1))
-                if rssi == 99:
-                    print("   ⚠ No signal detected")
-                    print("   Check antenna connection!")
-                    print("   Note: SMS may still work if registered on network")
-                elif rssi < 10:
-                    print(f"   ⚠ Weak signal (RSSI: {rssi})")
-                else:
-                    print(f"   ✓ Good signal (RSSI: {rssi})")
+        # Parse signal strength and monitor over time
+        signal_readings = []
+        for i in range(3):
+            if i > 0:
+                time.sleep(2)
+            resp = send_command(ser, "AT+CSQ", 1)
+            if '+CSQ:' in resp:
+                import re
+                match = re.search(r'\+CSQ:\s*(\d+),(\d+)', resp)
+                if match:
+                    rssi = int(match.group(1))
+                    signal_readings.append(rssi)
+                    
+        if signal_readings:
+            avg_rssi = sum(signal_readings) / len(signal_readings)
+            print(f"   Signal readings: {signal_readings} (avg: {avg_rssi:.1f})")
+            
+            if avg_rssi == 99:
+                print("   ⚠ No signal detected")
+                print("   Recommendations:")
+                print("     - Check antenna connection")
+                print("     - Move to higher location")
+                print("     - Check for obstructions")
+                print("   Note: SMS may still work if registered on network")
+            elif avg_rssi < 10:
+                print(f"   ⚠ Weak signal (RSSI: {avg_rssi:.1f})")
+                print("   Consider moving to better location for SMS reliability")
             else:
-                print("   ⚠ Could not parse signal strength")
+                print(f"   ✓ Good signal (RSSI: {avg_rssi:.1f})")
         else:
             print("   ⚠ No signal information available")
         
         resp = send_command(ser, "AT+CREG?", 1)
         print(f"   Registration: {resp}")
         
+        registered = False
         if '+CREG: 0,1' in resp:
             print("   ✓ Registered on home network")
+            registered = True
         elif '+CREG: 0,5' in resp:
             print("   ✓ Registered roaming")
+            registered = True
         elif '+CREG: 0,2' in resp:
-            print("   ⚠ Searching for network")
+            print("   ⚠ Searching for network...")
+            # Wait and retry for network registration
+            for i in range(5):
+                time.sleep(3)
+                resp = send_command(ser, "AT+CREG?", 1)
+                print(f"   Registration attempt {i+2}: {resp}")
+                if '+CREG: 0,1' in resp or '+CREG: 0,5' in resp:
+                    print("   ✓ Network registration successful!")
+                    registered = True
+                    break
+            if not registered:
+                print("   ⚠ Still searching for network after retries")
         elif not resp or 'CREG' not in resp:
             print("   ⚠ Registration status unclear, trying alternative check...")
             # Try CGREG for packet registration
@@ -164,6 +200,7 @@ def main():
             print(f"   Packet registration: {resp2}")
             if '+CGREG: 0,1' in resp2 or '+CGREG: 0,5' in resp2:
                 print("   ✓ Registered for data services")
+                registered = True
             else:
                 print("   ⚠ Registration status uncertain")
         else:
@@ -212,6 +249,27 @@ def main():
                     print(f"   SMS center is configured: {sms_center_resp}")
                 else:
                     print("   ⚠ SMS center may not be configured")
+                    
+                # Additional diagnostics
+                print("\n   Additional SMS diagnostics:")
+                
+                # Check SMS format
+                resp = send_command(ser, "AT+CMGF?", 1)
+                print(f"   SMS format: {resp}")
+                
+                # Check if SMS service is available
+                resp = send_command(ser, "AT+CSMS?", 1)
+                print(f"   SMS service status: {resp}")
+                
+                # Manual SMS test option
+                print("\n   Would you like to try manual SMS? (requires network registration)")
+                if registered:
+                    print("   ✓ Network is registered - manual SMS should work")
+                    print("   To manually test: AT+CMGS=\"+306976518415\"")
+                    print("   Then type message and press Ctrl+Z")
+                else:
+                    print("   ⚠ Network not registered - SMS will likely fail")
+                    print("   Wait for network registration before attempting SMS")
         else:
             print("\nTroubleshooting steps:")
             print("1. Check SIM card is properly inserted")
@@ -219,6 +277,18 @@ def main():
             print("3. Check SIM card is not damaged")
             print("4. Ensure SIM card is compatible with your network")
             print("5. Wait longer for SIM initialization (up to 2 minutes)")
+            print("6. Power cycle the modem completely")
+            
+        print("\n" + "="*50)
+        print("MANUAL SMS TESTING COMMANDS")
+        print("="*50)
+        print("If diagnostics show SIM ready and network registered:")
+        print("1. sudo minicom -b 57600 -D /dev/ttyS0")
+        print("2. AT+CMGF=1")
+        print("3. AT+CMGS=\"+306976518415\"")
+        print("4. Type your message")
+        print("5. Press Ctrl+A then Z, then press Ctrl+Z")
+        print("6. Press Ctrl+A then X to exit minicom")
         
         ser.close()
         
