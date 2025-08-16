@@ -11,11 +11,11 @@ from datetime import datetime
 # -----------------------------
 HALL_SENSOR_PIN = 17
 CIRCUMFERENCE = 0.5  # meters
-SMS_PHONE_NUMBER = "+306980531698"  # Replace with your phone number
+SMS_PHONE_NUMBER = "00306980531698"  # SIM7070G needs 00 format, not +
 # Raspberry Pi 2 uses /dev/ttyAMA0 for UART
 # Make sure to disable bluetooth on Pi 3+ or use /dev/serial0
-SERIAL_PORT = "/dev/serial0"  # SIMCOM SIM7070 detected
-BAUD_RATE = 57600  # Correct baud rate for SIM7070
+SERIAL_PORT = "/dev/ttyS0"  # SIMCOM SIM7070G detected
+BAUD_RATE = 57600  # Correct baud rate for SIM7070G
 SMS_INTERVAL = 10  # seconds
 DEBOUNCE_TIME = 0.05  # seconds
 MAX_RETRIES = 3
@@ -82,9 +82,11 @@ class ModemManager:
     def init_modem(self):
         commands = [
             (b'AT\r', "Basic AT test"),
+            (b'ATE0\r', "Disable echo"),
+            (b'AT+CSMS=1\r', "Enable SMS service"),
             (b'AT+CMGF=1\r', "Set SMS text mode"),
-            (b'AT+CFUN=1\r', "Set full functionality"),
-            (b'AT+CSCS="GSM"\r', "Set character set")
+            (b'AT+CPMS="ME","ME","ME"\r', "Use phone memory"),
+            (b'AT+CNMI=0,0,0,0,0\r', "Disable notifications")
         ]
         
         for cmd, desc in commands:
