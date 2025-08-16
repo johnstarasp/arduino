@@ -80,7 +80,8 @@ def check_systemd_services():
                 # Get more info about active service
                 result = subprocess.run(['systemctl', 'status', service, '--no-pager', '-l'], 
                                       capture_output=True, text=True)
-                print(f"   Details: {result.stdout.split('Active:')[1].split('\\n')[0] if 'Active:' in result.stdout else 'N/A'}")
+                details = result.stdout.split('Active:')[1].split('\n')[0] if 'Active:' in result.stdout else 'N/A'
+                print(f"   Details: {details}")
             else:
                 print(f"✓ {service}: {status}")
         except Exception as e:
@@ -125,7 +126,7 @@ def monitor_serial_activity(duration=10):
         
         while time.time() - start_time < duration:
             if ser.in_waiting > 0:
-                data = ser.read(ser.in_waiting()).decode('utf-8', errors='ignore')
+                data = ser.read(ser.in_waiting).decode('utf-8', errors='ignore')
                 print(f"Unexpected data: {data.strip()}")
                 activity_detected = True
             time.sleep(0.1)
