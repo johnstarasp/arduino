@@ -165,7 +165,7 @@ def main():
             
             # Quick SMS test
             print("\nTrying quick SMS test...")
-            ser.write(b'AT+CMGS="00306980531698"\r\n')
+            ser.write(b'AT+CMGS="+306976518415"\r\n')
             time.sleep(1)
             resp = ser.read(100).decode('utf-8', errors='ignore')
             
