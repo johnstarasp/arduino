@@ -134,6 +134,10 @@ class WaveshareSIM7070G:
         """Configure SMS settings for SIM7070G"""
         print("Configuring SMS settings...")
         
+        # Enable error reporting
+        response = self.send_at_command("AT+CMEE=2")
+        print(f"Error reporting: {response}")
+        
         # Set SMS text mode
         response = self.send_at_command("AT+CMGF=1")
         if "OK" not in response:
@@ -141,20 +145,34 @@ class WaveshareSIM7070G:
             return False
         print("✓ SMS text mode enabled")
         
-        # Set character set to GSM 7-bit
-        response = self.send_at_command("AT+CSCS=\"GSM\"")
+        # Set character set to IRA (International Reference Alphabet)
+        response = self.send_at_command("AT+CSCS=\"IRA\"")
         if "OK" not in response:
-            print(f"Failed to set character set: {response}")
-            return False
+            # Try GSM if IRA fails
+            response = self.send_at_command("AT+CSCS=\"GSM\"")
+            if "OK" not in response:
+                print(f"Failed to set character set: {response}")
+                return False
         print("✓ Character set configured")
         
-        # Set preferred message storage
-        response = self.send_at_command("AT+CPMS=\"ME\",\"ME\",\"ME\"")
-        print(f"✓ Message storage: {response}")
+        # Set preferred message storage to SIM card
+        response = self.send_at_command("AT+CPMS=\"SM\",\"SM\",\"SM\"")
+        print(f"Message storage: {response}")
         
-        # Check SMS service center
+        # Check and configure SMS service center
         response = self.send_at_command("AT+CSCA?")
-        print(f"✓ SMS service center: {response}")
+        print(f"SMS service center: {response}")
+        
+        # If no service center is set, try to set a Greek one
+        if "+CSCA:" not in response or '""' in response:
+            print("Setting SMS service center for Greek network...")
+            # Common Greek SMS service centers
+            response = self.send_at_command('AT+CSCA="+3097100000",145')
+            print(f"SMS service center set: {response}")
+        
+        # Enable SMS notification
+        response = self.send_at_command("AT+CNMI=1,1,0,0,0")
+        print(f"SMS notification: {response}")
         
         return True
         
