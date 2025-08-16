@@ -78,24 +78,51 @@ class WaveshareSIM7070G:
         response = self.send_at_command("ATI")
         print(f"✓ Module info: {response}")
         
-        # Check SIM card status
-        response = self.send_at_command("AT+CPIN?", wait_time=3)
-        if "READY" not in response:
-            print(f"SIM card not ready: {response}")
-            return False
-        print("✓ SIM card ready")
+        # Check SIM card status with retries
+        print("Checking SIM card status...")
+        for attempt in range(10):  # Try for 10 seconds
+            response = self.send_at_command("AT+CPIN?", wait_time=2)
+            print(f"SIM status attempt {attempt + 1}: {response}")
+            
+            if "READY" in response:
+                print("✓ SIM card ready")
+                break
+            elif "+CPIN: SIM PIN" in response:
+                print("SIM card requires PIN - please remove PIN lock")
+                return False
+            elif "+CPIN: SIM PUK" in response:
+                print("SIM card is PUK locked")
+                return False
+            elif "ERROR" in response:
+                print("SIM card error - check if SIM is properly inserted")
+                return False
+            
+            time.sleep(1)
+        else:
+            print("SIM card not ready after 10 attempts")
+            # Continue anyway - some modules work without CPIN response
+            print("Continuing without SIM READY confirmation...")
         
         # Wait for network registration
         print("Waiting for network registration...")
         for attempt in range(30):  # 30 second timeout
             response = self.send_at_command("AT+CREG?")
+            print(f"Network registration attempt {attempt + 1}: {response}")
+            
             if "+CREG: 0,1" in response or "+CREG: 0,5" in response:
                 print("✓ Network registered")
                 break
-            time.sleep(1)
+            elif "+CREG: 0,2" in response:
+                print("Searching for network...")
+            elif "+CREG: 0,3" in response:
+                print("Network registration denied")
+            elif "+CREG: 0,0" in response:
+                print("Network registration disabled")
+                
+            time.sleep(2)
         else:
-            print("Network registration failed")
-            return False
+            print("Network registration failed - continuing anyway...")
+            # Don't return False, continue with SMS attempt
             
         # Check signal strength
         response = self.send_at_command("AT+CSQ")
