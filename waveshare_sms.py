@@ -8,7 +8,7 @@ import time
 import sys
 
 class WaveshareSIM7070G:
-    def __init__(self, port='/dev/serial0', baudrate=115200, timeout=10):
+    def __init__(self, port='/dev/serial0', baudrate=57600, timeout=10):
         """
         Initialize SIM7070G module
         Waveshare default: 115200 baud, but module auto-detects from 9600-3686400
@@ -189,7 +189,7 @@ def main():
     message = "Hello from Raspberry Pi with Waveshare SIM7070G HAT!"
     
     # Initialize module
-    sim = WaveshareSIM7070G(port='/dev/serial0', baudrate=115200)
+    sim = WaveshareSIM7070G(port='/dev/serial0', baudrate=57600)
     
     if not sim.connect():
         print("Failed to connect to SIM7070G")
