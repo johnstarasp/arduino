@@ -157,6 +157,15 @@ def main():
             print("   ✓ Registered roaming")
         elif '+CREG: 0,2' in resp:
             print("   ⚠ Searching for network")
+        elif not resp or 'CREG' not in resp:
+            print("   ⚠ Registration status unclear, trying alternative check...")
+            # Try CGREG for packet registration
+            resp2 = send_command(ser, "AT+CGREG?", 1)
+            print(f"   Packet registration: {resp2}")
+            if '+CGREG: 0,1' in resp2 or '+CGREG: 0,5' in resp2:
+                print("   ✓ Registered for data services")
+            else:
+                print("   ⚠ Registration status uncertain")
         else:
             print("   ✗ Not registered")
         
