@@ -29,7 +29,7 @@ logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler('/tmp/bike_speedometer.log')
+        logging.FileHandler('bike_speedometer.log')  # Write to current directory
     ]
 )
 logger = logging.getLogger(__name__)
