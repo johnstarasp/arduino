@@ -131,7 +131,6 @@ class WaveshareSIM7070G:
         return True
         
     def configure_sms(self):
-
         """Configure SMS settings for SIM7070G"""
         print("Configuring SMS settings...")
         
@@ -139,13 +138,16 @@ class WaveshareSIM7070G:
         response = self.send_at_command("AT+CMEE=2")
         print(f"Error reporting: {response}")
         
-        # Set SMS text mode
+        # Set SMS text mode (1 = text mode, 0 = PDU mode)
         response = self.send_at_command("AT+CMGF=1")
         if "OK" not in response:
             print(f"Failed to set SMS text mode: {response}")
             return False
         print("✓ SMS text mode enabled")
-
+        
+        # Check SMS service center (optional but useful for debugging)
+        response = self.send_at_command("AT+CSCA?")
+        print(f"SMS Service Center: {response}")
         
         return True
         
@@ -154,49 +156,77 @@ class WaveshareSIM7070G:
         print(f"Sending SMS to {phone_number}: '{message}'")
         
         # Clear any pending data first
-        while self.ser.in_waiting > 0:
-            old_data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
-            print(f"Clearing old data: {old_data.strip()}")
-            time.sleep(0.1)
+        self.ser.reset_input_buffer()
+        time.sleep(0.5)
         
-        # Initialize AT+CMGS command
-        cmd = f'AT+CMGS="{phone_number}"'
-        print(f"Sending command: {cmd}")
+        # Send AT+CMGS command directly (don't use send_at_command for this)
+        cmd = f'AT+CMGS="{phone_number}"\r'
+        print(f"Sending command: {cmd.strip()}")
         
-        # Use the send_at_command method instead of manual approach
-        response = self.send_at_command(cmd, wait_time=5, expected_response=">")
-        print(f"CMGS command response: '{response.strip()}'")
+        # Send the command
+        self.ser.write(cmd.encode('utf-8'))
         
-        if ">" not in response:
-            print(f"Failed to get SMS prompt. Full response: '{response}'")
-            
-            # Check for specific error
-            if "ERROR" in response:
-                print("SMS command returned ERROR - check network and service center configuration")
-            elif not response.strip():
-                print("No response to SMS command - module may be busy or unresponsive")
-            
+        # Wait for the '>' prompt (module needs time to process)
+        response = ""
+        start_time = time.time()
+        prompt_found = False
+        
+        while time.time() - start_time < 5:  # 5 second timeout for prompt
+            if self.ser.in_waiting > 0:
+                char = self.ser.read(1).decode('utf-8', errors='ignore')
+                response += char
+                print(f"Received: {repr(char)}", end="")
+                
+                # Check for the prompt character
+                if char == '>' or response.endswith('> '):
+                    prompt_found = True
+                    print("\n✓ Got SMS prompt")
+                    break
+                    
+            # Check for errors
+            if "ERROR" in response or "CME ERROR" in response:
+                print(f"\nError received: {response}")
+                return False
+                
+            time.sleep(0.01)  # Small delay to prevent CPU spinning
+        
+        if not prompt_found:
+            print(f"\nFailed to get SMS prompt. Response: '{response}'")
             return False
             
-        print("✓ Got SMS prompt, sending message...")
+        # Small delay before sending message
+        time.sleep(0.5)
         
-        # Send message followed by Ctrl+Z
-        self.ser.write((message + '\x1A').encode('utf-8'))
+        print("Sending message text...")
+        # Send the message text followed by Ctrl+Z (0x1A)
+        self.ser.write(message.encode('utf-8'))
+        time.sleep(0.1)
+        self.ser.write(b'\x1A')  # Ctrl+Z to send the message
+        
+        print("Waiting for send confirmation...")
         
         # Wait for confirmation
         response = ""
         start_time = time.time()
-        while time.time() - start_time < 30:
+        while time.time() - start_time < 30:  # 30 second timeout
             if self.ser.in_waiting > 0:
                 data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
                 response += data
-                print(f"SMS Response: {data.strip()}")
+                print(f"Response: {data.strip()}")
                 
-            # Check for success
-            if "+CMGS:" in response and "OK" in response:
-                print("✓ SMS sent successfully!")
-                return True
-            elif "ERROR" in response:
+            # Check for success - looking for +CMGS response followed by OK
+            if "+CMGS:" in response:
+                if "OK" in response:
+                    print("✓ SMS sent successfully!")
+                    # Extract message reference if available
+                    if "+CMGS:" in response:
+                        try:
+                            ref = response.split("+CMGS:")[1].split("\n")[0].strip()
+                            print(f"Message reference: {ref}")
+                        except:
+                            pass
+                    return True
+            elif "ERROR" in response or "CME ERROR" in response:
                 print(f"✗ SMS send failed: {response}")
                 return False
                 
