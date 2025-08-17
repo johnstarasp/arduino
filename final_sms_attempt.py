@@ -125,7 +125,7 @@ for cmd, desc, wait in commands:
 
 # SMS Test
 print(f"\n4. SMS Test")
-phone = "+306976518415" #306976518415 #306980531698
+phone = "+306980531698" #306976518415 #306980531698
 message = "SUCCESS! SMS from Raspberry Pi SIM7070G module working!"
 
 print(f"   Recipient: {phone}")
