@@ -18,6 +18,105 @@ class WaveshareSIM7070G:
         self.timeout = timeout
         self.ser = None
         
+    def print_cms_error_meaning(self, error_code):
+        """Print CMS error code meaning"""
+        cms_errors = {
+            "300": "ME failure",
+            "301": "SMS service of ME reserved",
+            "302": "Operation not allowed",
+            "303": "Operation not supported",
+            "304": "Invalid PDU mode parameter",
+            "305": "Invalid text mode parameter",
+            "310": "SIM not inserted",
+            "311": "SIM PIN required",
+            "312": "PH-SIM PIN required",
+            "313": "SIM failure",
+            "314": "SIM busy",
+            "315": "SIM wrong",
+            "316": "SIM PUK required",
+            "317": "SIM PIN2 required",
+            "318": "SIM PUK2 required",
+            "320": "Memory failure",
+            "321": "Invalid memory index",
+            "322": "Memory full",
+            "330": "SMSC address unknown",
+            "331": "No network service",
+            "332": "Network timeout",
+            "500": "Unknown error",
+            "512": "SIM not ready",
+            "513": "Message length exceeds",
+            "514": "Invalid request parameters",
+            "515": "ME storage failure",
+            "517": "Invalid service mode",
+            "528": "More message to send state error",
+            "529": "MO SMS is not allow",
+            "530": "GPRS is suspended",
+            "531": "ME storage full"
+        }
+        
+        if error_code in cms_errors:
+            print(f"Error meaning: {cms_errors[error_code]}")
+        else:
+            print(f"Unknown CMS error code: {error_code}")
+            
+    def send_sms_alternative(self, phone_number, message):
+        """Alternative SMS sending method without international format"""
+        print(f"\nTrying alternative SMS method with number: {phone_number}")
+        
+        # Clear buffer
+        self.ser.reset_input_buffer()
+        time.sleep(0.5)
+        
+        # Try sending without quotes or with different format
+        cmd = f'AT+CMGS={phone_number}\r'
+        print(f"Sending command: {cmd.strip()}")
+        
+        self.ser.write(cmd.encode('utf-8'))
+        
+        # Wait for prompt
+        response = ""
+        start_time = time.time()
+        
+        while time.time() - start_time < 5:
+            if self.ser.in_waiting > 0:
+                chunk = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
+                response += chunk
+                
+                if '>' in response:
+                    print("✓ Got SMS prompt (alternative method)")
+                    # Send message
+                    time.sleep(0.5)
+                    self.ser.write(message.encode('utf-8'))
+                    time.sleep(0.1)
+                    self.ser.write(b'\x1A')
+                    
+                    # Wait for confirmation
+                    conf_response = ""
+                    conf_start = time.time()
+                    while time.time() - conf_start < 30:
+                        if self.ser.in_waiting > 0:
+                            data = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
+                            conf_response += data
+                            print(f"Response: {data.strip()}")
+                            
+                        if "+CMGS:" in conf_response and "OK" in conf_response:
+                            print("✓ SMS sent successfully (alternative method)!")
+                            return True
+                        elif "ERROR" in conf_response:
+                            print(f"✗ SMS send failed: {conf_response}")
+                            return False
+                        time.sleep(0.5)
+                    return False
+                    
+            if "ERROR" in response:
+                print(f"Alternative method failed: {response}")
+                return False
+                
+            time.sleep(0.1)
+        
+        print("Alternative method timeout")
+        return False
+        
     def connect(self):
         """Connect to the SIM7070G module"""
         try:
@@ -161,6 +260,12 @@ class WaveshareSIM7070G:
         self.ser.reset_input_buffer()
         time.sleep(0.5)
         
+        # First check if we need to set the SMS service center
+        response = self.send_at_command("AT+CSCA?")
+        if "+CSCA:" not in response or '""' in response:
+            print("SMS Service Center not configured. You may need to set it manually.")
+            print("Use AT+CSCA=\"+YourServiceCenterNumber\" to configure")
+        
         # Send AT+CMGS command directly (don't use send_at_command for this)
         cmd = f'AT+CMGS="{phone_number}"\r'
         print(f"Sending command: {cmd.strip()}")
@@ -175,25 +280,37 @@ class WaveshareSIM7070G:
         
         while time.time() - start_time < 5:  # 5 second timeout for prompt
             if self.ser.in_waiting > 0:
-                char = self.ser.read(1).decode('utf-8', errors='ignore')
-                response += char
-                print(f"Received: {repr(char)}", end="")
+                chunk = self.ser.read(self.ser.in_waiting).decode('utf-8', errors='ignore')
+                response += chunk
                 
                 # Check for the prompt character
-                if char == '>' or response.endswith('> '):
+                if '>' in response:
                     prompt_found = True
                     print("\n✓ Got SMS prompt")
                     break
                     
             # Check for errors
-            if "ERROR" in response or "CME ERROR" in response:
+            if "CMS ERROR" in response or "CME ERROR" in response or "+CMS ERROR" in response:
                 print(f"\nError received: {response}")
+                # Parse error code if available
+                if "CMS ERROR:" in response:
+                    try:
+                        error_code = response.split("CMS ERROR:")[1].strip().split()[0]
+                        print(f"CMS Error Code: {error_code}")
+                        self.print_cms_error_meaning(error_code)
+                    except:
+                        pass
                 return False
                 
-            time.sleep(0.01)  # Small delay to prevent CPU spinning
+            time.sleep(0.1)  # Small delay to prevent CPU spinning
         
         if not prompt_found:
             print(f"\nFailed to get SMS prompt. Response: '{response}'")
+            # Try alternative approach - send without international format
+            if phone_number.startswith("+"):
+                alt_number = phone_number[1:]  # Remove the +
+                print(f"Trying alternative number format: {alt_number}")
+                return self.send_sms_alternative(alt_number, message)
             return False
             
         # Small delay before sending message
