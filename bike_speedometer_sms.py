@@ -17,7 +17,7 @@ class BikeSpeedometer:
         self.last_pulse_time = 0
         self.current_speed = 0.0
         self.ser = None
-        self.phone_number = "+306972290333"  # Updated phone number
+        self.phone_number = "+306980531698"  # Updated phone number
         self.running = True
         
     def init_gpio(self):
