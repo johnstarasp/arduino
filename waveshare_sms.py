@@ -131,6 +131,11 @@ class WaveshareSIM7070G:
         return True
         
     def configure_sms(self):
+        response = self.send_at_command("AT+CMGF=1")
+        if "OK" not in response:
+            print(f"Failed to set SMS text mode: {response}")
+            return False
+        print("✓ SMS text mode enabled")
         return True
         """Configure SMS settings for SIM7070G"""
         print("Configuring SMS settings...")
