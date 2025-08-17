@@ -277,6 +277,7 @@ class WaveshareSIM7070G:
         response = ""
         start_time = time.time()
         prompt_found = False
+        empty_response_count = 0
         
         while time.time() - start_time < 5:  # 5 second timeout for prompt
             if self.ser.in_waiting > 0:
@@ -301,17 +302,30 @@ class WaveshareSIM7070G:
                     except:
                         pass
                 return False
+            
+            # If we've waited a bit and still have empty response, assume we're at prompt
+            if time.time() - start_time > 2 and not response:
+                empty_response_count += 1
+                if empty_response_count > 5:  # After several checks with no response
+                    print("\nNo response detected - assuming module is waiting at prompt")
+                    prompt_found = True
+                    break
                 
             time.sleep(0.1)  # Small delay to prevent CPU spinning
         
         if not prompt_found:
             print(f"\nFailed to get SMS prompt. Response: '{response}'")
-            # Try alternative approach - send without international format
-            if phone_number.startswith("+"):
-                alt_number = phone_number[1:]  # Remove the +
-                print(f"Trying alternative number format: {alt_number}")
-                return self.send_sms_alternative(alt_number, message)
-            return False
+            # If response is completely empty after timeout, try sending message anyway
+            if not response:
+                print("Empty response - attempting to send message anyway...")
+                prompt_found = True  # Force continuation
+            else:
+                # Try alternative approach - send without international format
+                if phone_number.startswith("+"):
+                    alt_number = phone_number[1:]  # Remove the +
+                    print(f"Trying alternative number format: {alt_number}")
+                    return self.send_sms_alternative(alt_number, message)
+                return False
             
         # Small delay before sending message
         time.sleep(0.5)
