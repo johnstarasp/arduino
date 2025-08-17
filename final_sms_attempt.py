@@ -40,9 +40,9 @@ except Exception as e:
 # Serial port discovery
 print("\n2. Serial Port Discovery")
 test_ports = [
-    ('/dev/ttyS0', [115200, 57600, 9600]),
-    ('/dev/serial0', [115200, 57600, 9600]),
-    ('/dev/ttyAMA0', [115200, 57600]),
+    # ('/dev/ttyS0', [115200, 57600, 9600]),
+    ('/dev/serial0', [57600]),
+    # ('/dev/ttyAMA0', [115200, 57600]),
 ]
 
 module_found = False
