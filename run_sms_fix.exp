@@ -1,0 +1,30 @@
+#!/usr/bin/expect -f
+set timeout 60
+spawn ssh jstaras@192.168.1.48
+expect "password:"
+send "Saskatouraw1!\r"
+expect "$ "
+send "cd repos/arduinoP/arduino\r"
+expect "$ "
+send "sudo python3 quick_sms_fix.py\r"
+expect {
+    "password for" {
+        send "Saskatouraw1!\r"
+        exp_continue
+    }
+    "SUCCESS!" {
+        send_user "\n=== SMS FIX WORKED! ===\n"
+        exp_continue
+    }
+    "All methods failed" {
+        send_user "\n=== ALL METHODS FAILED ===\n"
+        exp_continue
+    }
+    "$ " {
+        send "exit\r"
+    }
+    timeout {
+        send_user "\n=== TIMEOUT ===\n"
+    }
+}
+expect eof
