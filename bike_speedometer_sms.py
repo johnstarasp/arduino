@@ -11,7 +11,7 @@ from datetime import datetime
 
 class BikeSpeedometer:
     def __init__(self):
-        self.hall_pin = 18  # GPIO pin for hall sensor
+        self.hall_pin = 17  # GPIO pin for hall sensor
         self.wheel_circumference = 2.1  # meters (adjust for your wheel)
         self.pulse_count = 0
         self.last_pulse_time = 0
