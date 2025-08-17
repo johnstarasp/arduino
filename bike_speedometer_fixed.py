@@ -16,7 +16,7 @@ class BikeSpeedometer:
         self.last_pulse_time = 0
         self.current_speed = 0.0
         self.ser = None
-        self.phone_number = "+306972290333"
+        self.phone_number = "+306980531698"
         self.running = True
         self.last_pin_state = 1  # Assume high initially (pull-up)
         
