@@ -1,7 +1,7 @@
 #!/bin/bash
-# Installation script for bike speedometer auto-start
+# Installation script for speedometer auto-start
 
-echo "=== Bike Speedometer Auto-Start Installation ==="
+echo "=== Speedometer Auto-Start Installation ==="
 echo
 
 # Check if running as root
@@ -16,16 +16,16 @@ PROJECT_DIR="/home/jstaras/repos/arduinoP/arduino"
 # Option 1: Create systemd service (RECOMMENDED)
 echo "Installing systemd service..."
 
-cat > /etc/systemd/system/bike-speedometer.service << EOF
+cat > /etc/systemd/system/speedometer.service << EOF
 [Unit]
-Description=Bike Speedometer with SMS Updates
+Description=Speedometer with SMS Updates
 After=network.target
 
 [Service]
 Type=simple
 User=root
 WorkingDirectory=$PROJECT_DIR/production
-ExecStart=/usr/bin/python3 $PROJECT_DIR/production/bike_speedometer.py
+ExecStart=/usr/bin/python3 $PROJECT_DIR/production/speedometer.py
 Restart=always
 RestartSec=30
 StandardOutput=journal
@@ -39,23 +39,23 @@ EOF
 systemctl daemon-reload
 
 # Enable service to start on boot
-systemctl enable bike-speedometer.service
+systemctl enable speedometer.service
 
 echo "✓ Systemd service installed"
 echo
 echo "Service commands:"
-echo "  Start:   sudo systemctl start bike-speedometer"
-echo "  Stop:    sudo systemctl stop bike-speedometer"
-echo "  Status:  sudo systemctl status bike-speedometer"
-echo "  Logs:    sudo journalctl -u bike-speedometer -f"
-echo "  Disable: sudo systemctl disable bike-speedometer"
+echo "  Start:   sudo systemctl start speedometer"
+echo "  Stop:    sudo systemctl stop speedometer"
+echo "  Status:  sudo systemctl status speedometer"
+echo "  Logs:    sudo journalctl -u speedometer -f"
+echo "  Disable: sudo systemctl disable speedometer"
 echo
 
 # Option 2: Add to crontab as backup
 echo "Adding crontab entry as backup option..."
 
 # Add to root crontab
-(crontab -l 2>/dev/null; echo "@reboot sleep 30 && /usr/bin/python3 $PROJECT_DIR/production/bike_speedometer.py >> $PROJECT_DIR/speedometer.log 2>&1") | crontab -
+(crontab -l 2>/dev/null; echo "@reboot sleep 30 && /usr/bin/python3 $PROJECT_DIR/production/speedometer.py >> $PROJECT_DIR/speedometer.log 2>&1") | crontab -
 
 echo "✓ Crontab entry added"
 echo
@@ -64,5 +64,5 @@ echo "=== Installation Complete ==="
 echo
 echo "The speedometer will start automatically on boot."
 echo "To start it now, run:"
-echo "  sudo systemctl start bike-speedometer"
+echo "  sudo systemctl start speedometer"
 echo

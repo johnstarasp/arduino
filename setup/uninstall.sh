@@ -1,7 +1,7 @@
 #!/bin/bash
-# Uninstallation script for bike speedometer auto-start
+# Uninstallation script for speedometer auto-start
 
-echo "=== Bike Speedometer Auto-Start Uninstallation ==="
+echo "=== Speedometer Auto-Start Uninstallation ==="
 echo
 
 # Check if running as root
@@ -14,13 +14,13 @@ fi
 echo "Removing systemd service..."
 
 # Stop the service if running
-systemctl stop bike-speedometer.service 2>/dev/null
+systemctl stop speedometer.service 2>/dev/null
 
 # Disable the service
-systemctl disable bike-speedometer.service 2>/dev/null
+systemctl disable speedometer.service 2>/dev/null
 
 # Remove service file
-rm -f /etc/systemd/system/bike-speedometer.service
+rm -f /etc/systemd/system/speedometer.service
 
 # Reload systemd
 systemctl daemon-reload
@@ -31,7 +31,7 @@ echo "✓ Systemd service removed"
 echo "Removing crontab entry..."
 
 # Remove the specific line from crontab
-crontab -l 2>/dev/null | grep -v "bike_speedometer.py" | crontab -
+crontab -l 2>/dev/null | grep -v "speedometer.py" | crontab -
 
 echo "✓ Crontab entry removed"
 

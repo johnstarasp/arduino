@@ -1,6 +1,6 @@
-# Auto-Start Setup for Bike Speedometer
+# Auto-Start Setup for Speedometer
 
-This directory contains scripts to automatically start the bike speedometer when your Raspberry Pi boots.
+This directory contains scripts to automatically start the speedometer when your Raspberry Pi boots.
 
 ## 🚀 Quick Installation
 
@@ -12,7 +12,7 @@ sudo bash install.sh
 ## 📋 What Gets Installed
 
 ### Method 1: Systemd Service (Primary)
-- **Service name**: `bike-speedometer`
+- **Service name**: `speedometer`
 - **Auto-starts** on boot
 - **Auto-restarts** if it crashes
 - **Logs** to system journal
@@ -27,34 +27,34 @@ sudo bash install.sh
 ### Start/Stop Service
 ```bash
 # Start the speedometer
-sudo systemctl start bike-speedometer
+sudo systemctl start speedometer
 
 # Stop the speedometer  
-sudo systemctl stop bike-speedometer
+sudo systemctl stop speedometer
 
 # Restart the speedometer
-sudo systemctl restart bike-speedometer
+sudo systemctl restart speedometer
 ```
 
 ### Check Status
 ```bash
 # Service status
-sudo systemctl status bike-speedometer
+sudo systemctl status speedometer
 
 # View live logs
-sudo journalctl -u bike-speedometer -f
+sudo journalctl -u speedometer -f
 
 # View recent logs
-sudo journalctl -u bike-speedometer --since "10 minutes ago"
+sudo journalctl -u speedometer --since "10 minutes ago"
 ```
 
 ### Enable/Disable Auto-Start
 ```bash
 # Enable auto-start on boot
-sudo systemctl enable bike-speedometer
+sudo systemctl enable speedometer
 
 # Disable auto-start on boot
-sudo systemctl disable bike-speedometer
+sudo systemctl disable speedometer
 ```
 
 ## 📊 Monitoring
@@ -62,7 +62,7 @@ sudo systemctl disable bike-speedometer
 ### Real-time Logs
 ```bash
 # System journal (recommended)
-sudo journalctl -u bike-speedometer -f
+sudo journalctl -u speedometer -f
 
 # Log file (if using crontab method)
 tail -f speedometer.log
@@ -71,10 +71,10 @@ tail -f speedometer.log
 ### Check if Running
 ```bash
 # Check service status
-sudo systemctl is-active bike-speedometer
+sudo systemctl is-active speedometer
 
 # Check process
-ps aux | grep bike_speedometer
+ps aux | grep speedometer
 ```
 
 ## 🔧 Troubleshooting
@@ -82,14 +82,14 @@ ps aux | grep bike_speedometer
 ### Service Won't Start
 ```bash
 # Check service status
-sudo systemctl status bike-speedometer
+sudo systemctl status speedometer
 
 # Check for errors
-sudo journalctl -u bike-speedometer --since "5 minutes ago"
+sudo journalctl -u speedometer --since "5 minutes ago"
 
 # Test script manually
 cd production/
-sudo python3 bike_speedometer.py
+sudo python3 speedometer.py
 ```
 
 ### Permissions Issues

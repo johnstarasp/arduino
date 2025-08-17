@@ -1,6 +1,6 @@
 # SIM7070G SMS Speedometer for Raspberry Pi
 
-This project implements a bike speedometer using a Waveshare SIM7070G HAT on Raspberry Pi that sends speed updates via SMS every 30 seconds.
+This project implements a speedometer using a Waveshare SIM7070G HAT on Raspberry Pi that sends speed updates via SMS every 30 seconds.
 
 ## 🚀 Quick Start
 
@@ -10,7 +10,7 @@ This project implements a bike speedometer using a Waveshare SIM7070G HAT on Ras
 python3 diagnostics/verify_sms_fix.py
 
 # Run the production speedometer
-sudo python3 production/bike_speedometer.py
+sudo python3 production/speedometer.py
 ```
 
 ### Auto-Start on Boot
@@ -20,10 +20,10 @@ cd setup/
 sudo bash install.sh
 
 # Start service now
-sudo systemctl start bike-speedometer
+sudo systemctl start speedometer
 
 # Check status
-sudo systemctl status bike-speedometer
+sudo systemctl status speedometer
 ```
 
 ## 📋 Project Overview
@@ -89,8 +89,8 @@ This is automatically handled by the production scripts.
 
 ```
 ├── production/          # Ready-to-use scripts
-│   ├── bike_speedometer.py       # Main speedometer application
-│   └── sms_sender.py             # Standalone SMS functionality
+│   ├── speedometer.py           # Main speedometer application
+│   └── sms_sender.py            # Standalone SMS functionality
 ├── diagnostics/         # Debugging and testing tools
 │   ├── verify_sms_fix.py         # Verify SMS is working
 │   ├── sim_diagnosis.py          # Comprehensive SIM testing

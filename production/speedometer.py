@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Production Bike Speedometer with SMS Updates (Clean ASCII Version)
+Production Speedometer with SMS Updates (Clean ASCII Version)
 Waveshare SIM7070G HAT on Raspberry Pi
 
 Features:
@@ -17,7 +17,7 @@ import time
 import sys
 from datetime import datetime
 
-class BikeSpeedometer:
+class Speedometer:
     def __init__(self):
         # Configuration
         self.hall_pin = 17                    # GPIO pin for hall sensor
@@ -228,7 +228,7 @@ class BikeSpeedometer:
     
     def run(self):
         """Main speedometer application"""
-        print("====== BIKE SPEEDOMETER WITH SMS UPDATES ======")
+        print("====== SPEEDOMETER WITH SMS UPDATES ======")
         print("=" * 50)
         print(f"Phone: {self.phone_number}")
         print(f"Wheel circumference: {self.wheel_circumference}m")
@@ -324,7 +324,7 @@ class BikeSpeedometer:
 
 def main():
     """Application entry point"""
-    speedometer = BikeSpeedometer()
+    speedometer = Speedometer()
     speedometer.run()
 
 if __name__ == "__main__":
