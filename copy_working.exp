@@ -1,0 +1,4 @@
+#!/usr/bin/expect -f
+spawn scp working_sms.py jstaras@192.168.1.48:repos/arduinoP/arduino/
+expect "password:" { send "Saskatouraw1!\r" }
+expect eof

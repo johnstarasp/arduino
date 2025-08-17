@@ -1,0 +1,7 @@
+#!/usr/bin/expect -f
+set timeout 30
+spawn scp power_test.py jstaras@192.168.1.48:repos/arduinoP/arduino/
+expect {
+    "password:" { send "Saskatouraw1!\r" }
+}
+expect eof

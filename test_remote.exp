@@ -1,0 +1,33 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+spawn ssh jstaras@192.168.1.48
+
+expect "password:"
+send "Saskatouraw1!\r"
+
+expect "$ "
+send "cd repos/arduinoP/arduino\r"
+
+expect "$ "
+send "sudo python3 final_sms.py\r"
+
+expect {
+    "password for" {
+        send "Saskatouraw1!\r"
+        exp_continue
+    }
+    "SMS SENT" {
+        send_user "\nSUCCESS: SMS was sent!\n"
+    }
+    "Module not found" {
+        send_user "\nERROR: Module not responding\n"
+    }
+    timeout {
+        send_user "\nTimeout waiting for response\n"
+    }
+}
+
+expect "$ "
+send "exit\r"
+expect eof

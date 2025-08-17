@@ -1,0 +1,48 @@
+#!/usr/bin/expect -f
+
+set timeout 120
+
+# Connect to Pi
+spawn ssh jstaras@192.168.1.48
+expect "password:"
+send "Saskatouraw1!\r"
+
+# Wait for shell prompt
+expect "$ "
+
+# Navigate to directory
+send "cd repos/arduinoP/arduino\r"
+expect "$ "
+
+# Run the script
+send "sudo python3 working_sms.py\r"
+
+# Handle sudo password
+expect {
+    "password for" {
+        send "Saskatouraw1!\r"
+        exp_continue
+    }
+    "SIM7070G SMS Sender" {
+        send_user "\n=== SCRIPT STARTED ===\n"
+        exp_continue
+    }
+    "SMS SENT SUCCESSFULLY" {
+        send_user "\n=== SUCCESS! SMS WAS SENT! ===\n"
+    }
+    "Failed to find module" {
+        send_user "\n=== MODULE NOT FOUND ===\n"
+    }
+    "Done!" {
+        send_user "\n=== SCRIPT COMPLETED ===\n"
+    }
+    timeout {
+        send_user "\n=== TIMEOUT ===\n"
+    }
+}
+
+# Exit
+send "exit\r"
+expect eof
+
+puts "\nTest completed."

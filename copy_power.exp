@@ -1,0 +1,12 @@
+#!/usr/bin/expect -f
+set timeout 30
+spawn scp sms_with_power.py jstaras@192.168.1.48:repos/arduinoP/arduino/
+expect {
+    "password:" { send "Saskatouraw1!\r" }
+    "yes/no" {
+        send "yes\r"
+        expect "password:"
+        send "Saskatouraw1!\r"
+    }
+}
+expect eof
