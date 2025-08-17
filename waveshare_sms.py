@@ -131,6 +131,7 @@ class WaveshareSIM7070G:
         return True
         
     def configure_sms(self):
+        return True
         """Configure SMS settings for SIM7070G"""
         print("Configuring SMS settings...")
         
