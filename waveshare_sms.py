@@ -133,17 +133,19 @@ class WaveshareSIM7070G:
     def configure_sms(self):
         """Configure SMS settings for SIM7070G"""
         print("Configuring SMS settings...")
-        
-        # Enable error reporting
-        response = self.send_at_command("AT+CMEE=2")
-        print(f"Error reporting: {response}")
-        
+
         # Set SMS text mode (1 = text mode, 0 = PDU mode)
         response = self.send_at_command("AT+CMGF=1")
         if "OK" not in response:
             print(f"Failed to set SMS text mode: {response}")
             return False
         print("✓ SMS text mode enabled")
+        
+        # Enable error reporting
+        response = self.send_at_command("AT+CMEE=2")
+        print(f"Error reporting: {response}")
+        
+
         
         # Check SMS service center (optional but useful for debugging)
         response = self.send_at_command("AT+CSCA?")
