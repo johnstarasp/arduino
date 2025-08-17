@@ -1,0 +1,23 @@
+#!/usr/bin/expect -f
+
+set timeout 30
+spawn ssh jstaras@192.168.1.48
+expect {
+    "password:" {
+        send "Saskatouraw1!\r"
+        expect {
+            "$ " { send "cd repos/arduinoP/arduino\r" }
+            "# " { send "cd repos/arduinoP/arduino\r" }
+        }
+    }
+    "yes/no" {
+        send "yes\r"
+        expect "password:"
+        send "Saskatouraw1!\r"
+        expect {
+            "$ " { send "cd repos/arduinoP/arduino\r" }
+            "# " { send "cd repos/arduinoP/arduino\r" }
+        }
+    }
+}
+interact
