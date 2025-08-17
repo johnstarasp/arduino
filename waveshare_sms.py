@@ -162,6 +162,13 @@ class WaveshareSIM7070G:
         """Initialize SIM7070G module with proper sequence"""
         print("Initializing SIM7070G module...")
         
+        # Check for interference from other processes
+        if self.ser.in_waiting > 100:
+            print("WARNING: Detected buffered data - another process may be using the serial port")
+            print("Consider stopping other serial applications (picocom, minicom, etc.)")
+            self.ser.reset_input_buffer()
+            time.sleep(1)
+        
         # Basic AT test
         response = self.send_at_command("AT")
         if "OK" not in response:
@@ -260,11 +267,17 @@ class WaveshareSIM7070G:
         self.ser.reset_input_buffer()
         time.sleep(0.5)
         
-        # First check if we need to set the SMS service center
-        response = self.send_at_command("AT+CSCA?")
-        if "+CSCA:" not in response or '""' in response:
-            print("SMS Service Center not configured. You may need to set it manually.")
-            print("Use AT+CSCA=\"+YourServiceCenterNumber\" to configure")
+        # CRITICAL: Set text mode right before sending SMS
+        # The module seems to lose this setting
+        print("Setting SMS text mode immediately before sending...")
+        response = self.send_at_command("AT+CMGF=1", wait_time=1)
+        if "OK" not in response:
+            print(f"Failed to set text mode: {response}")
+            return False
+        print("✓ Text mode set")
+        
+        # Small delay to ensure mode is set
+        time.sleep(0.5)
         
         # Send AT+CMGS command directly (don't use send_at_command for this)
         cmd = f'AT+CMGS="{phone_number}"\r'
