@@ -4,12 +4,26 @@ This project implements a bike speedometer using a Waveshare SIM7070G HAT on Ras
 
 ## 🚀 Quick Start
 
+### Manual Run
 ```bash
+# Test SMS functionality first
+python3 diagnostics/verify_sms_fix.py
+
 # Run the production speedometer
 sudo python3 production/bike_speedometer.py
+```
 
-# Test SMS functionality
-python3 diagnostics/verify_sms_fix.py
+### Auto-Start on Boot
+```bash
+# Install auto-start service
+cd setup/
+sudo bash install.sh
+
+# Start service now
+sudo systemctl start bike-speedometer
+
+# Check status
+sudo systemctl status bike-speedometer
 ```
 
 ## 📋 Project Overview
@@ -84,6 +98,10 @@ This is automatically handled by the production scripts.
 │   └── minimal_sms_test.py       # Basic SMS test
 ├── development/          # Development and experimental scripts
 │   └── [various test scripts]
+├── setup/               # Auto-start installation scripts
+│   ├── install.sh       # Install auto-start service
+│   ├── uninstall.sh     # Remove auto-start service
+│   └── README.md        # Auto-start documentation
 ├── archive/             # Archived experimental files
 └── README.md            # This file
 ```
