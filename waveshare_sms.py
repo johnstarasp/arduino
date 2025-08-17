@@ -383,7 +383,7 @@ class WaveshareSIM7070G:
 
 def main():
     """Main function"""
-    phone_number = "+306976518415"
+    phone_number = "00306976518415"
     message = "Hello from Raspberry Pi with Waveshare SIM7070G HAT!"
     
     # Initialize module
