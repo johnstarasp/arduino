@@ -94,11 +94,11 @@ class BikeSpeedometer:
         """Initialize SIM7070G module"""
         try:
             print("Powering SIM module...")
-            self.GPIO.output(4, GPIO.LOW)
+            self.GPIO.output(4, self.GPIO.LOW)
             time.sleep(3)
-            self.GPIO.output(4, GPIO.HIGH)
+            self.GPIO.output(4, self.GPIO.HIGH)
             time.sleep(3)
-            self.GPIO.output(4, GPIO.LOW)
+            self.GPIO.output(4, self.GPIO.LOW)
             
             print("Waiting for module boot...")
             time.sleep(15)
