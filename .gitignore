@@ -28,3 +28,5 @@ Thumbs.db
 # Config files with secrets
 config.ini
 secrets.json
+
+node_modules/

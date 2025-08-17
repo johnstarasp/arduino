@@ -1,0 +1,27 @@
+# Core dependencies
+RPi.GPIO==0.7.1
+pyserial==3.5
+
+# HTTP and networking
+requests==2.31.0
+urllib3==2.0.4
+
+# Data handling
+sqlite3  # Built into Python 3
+
+# JSON handling (built-in)
+# json
+
+# Date/time handling (built-in)
+# datetime
+
+# System utilities (built-in)
+# os
+# time
+# threading
+# queue
+
+# Optional: For advanced features
+# gpiozero==1.6.2  # Alternative GPIO library
+# psutil==5.9.5     # System monitoring
+# schedule==1.2.0   # Task scheduling

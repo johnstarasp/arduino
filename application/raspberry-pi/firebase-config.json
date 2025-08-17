@@ -1,0 +1,14 @@
+{
+  "hall_pin": 17,
+  "wheel_circumference": 2.1,
+  "firebase_url": "https://your-project-default-rtdb.firebaseio.com",
+  "firebase_project_id": "your-project-id",
+  "device_id": "speedometer_001",
+  "api_key": "your-firebase-web-api-key",
+  "data_interval": 30,
+  "retry_attempts": 3,
+  "apn": "internet",
+  "backup_interval": 300,
+  "max_buffered_records": 1000,
+  "firebase_auth_token": "your-custom-token-or-service-account"
+}

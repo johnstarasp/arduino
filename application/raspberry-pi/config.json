@@ -1,0 +1,11 @@
+{
+  "hall_pin": 17,
+  "wheel_circumference": 2.1,
+  "api_endpoint": "http://localhost:3000/api/data",
+  "device_id": "speedometer_001",
+  "data_interval": 30,
+  "retry_attempts": 3,
+  "apn": "internet",
+  "backup_interval": 300,
+  "max_buffered_records": 1000
+}

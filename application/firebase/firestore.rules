@@ -1,0 +1,112 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Devices collection - read-only for authenticated users
+    match /devices/{deviceId} {
+      // Allow read access for authenticated users (mobile app)
+      allow read: if request.auth != null;
+      
+      // Allow write access only for server/admin operations
+      allow write: if false; // Handle device creation via server API
+    }
+    
+    // Speed data collection
+    match /speed_data/{dataId} {
+      // Allow read access for authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow creation only with valid device_id and required fields
+      allow create: if request.auth != null 
+        && request.resource.data.keys().hasAll(['device_id', 'timestamp', 'speed', 'pulse_count'])
+        && request.resource.data.device_id is string
+        && request.resource.data.speed is number
+        && request.resource.data.pulse_count is number;
+      
+      // No updates or deletes allowed
+      allow update, delete: if false;
+    }
+    
+    // Alerts collection
+    match /alerts/{alertId} {
+      // Allow read access for authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow creation only with required fields
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['device_id', 'alert_type', 'message', 'severity'])
+        && request.resource.data.device_id is string
+        && request.resource.data.alert_type is string
+        && request.resource.data.message is string
+        && request.resource.data.severity in ['info', 'warning', 'error'];
+      
+      // Allow updates only for acknowledgment
+      allow update: if request.auth != null
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['acknowledged', 'acknowledged_at'])
+        && request.resource.data.acknowledged == true;
+      
+      // No deletes allowed
+      allow delete: if false;
+    }
+    
+    // API keys collection - server-only access
+    match /api_keys/{keyId} {
+      // No direct access from clients
+      allow read, write: if false;
+    }
+    
+    // FCM tokens collection
+    match /fcm_tokens/{tokenId} {
+      // Allow users to manage their own tokens
+      allow read, write: if request.auth != null 
+        && request.auth.uid == resource.data.user_id;
+      
+      // Allow creation of new tokens
+      allow create: if request.auth != null
+        && request.resource.data.user_id == request.auth.uid
+        && request.resource.data.keys().hasAll(['user_id', 'token', 'device_type'])
+        && request.resource.data.token is string
+        && request.resource.data.device_type in ['ios', 'android'];
+    }
+    
+    // User preferences collection
+    match /user_preferences/{userId} {
+      // Users can only access their own preferences
+      allow read, write: if request.auth != null 
+        && request.auth.uid == userId;
+    }
+    
+    // Trip summaries collection
+    match /trip_summaries/{tripId} {
+      // Allow read for authenticated users
+      allow read: if request.auth != null;
+      
+      // Allow creation with required fields
+      allow create: if request.auth != null
+        && request.resource.data.keys().hasAll(['device_id', 'start_time', 'end_time', 'distance', 'avg_speed', 'max_speed'])
+        && request.resource.data.device_id is string
+        && request.resource.data.distance is number
+        && request.resource.data.avg_speed is number
+        && request.resource.data.max_speed is number;
+      
+      // No updates or deletes
+      allow update, delete: if false;
+    }
+    
+    // Analytics collection - read-only for users
+    match /analytics/{docId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Server-generated only
+    }
+    
+    // System logs - admin only (handled by server)
+    match /system_logs/{logId} {
+      allow read, write: if false;
+    }
+    
+    // Default deny rule for any other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
